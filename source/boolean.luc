@@ -1,0 +1,23 @@
+module boolean (
+    input a,
+    input b,
+    input alufn[4],
+    output out
+  ) {
+      
+  always {
+    out = b00;
+    // using ab as selector bits, output the boolean logic based on alufn
+    case (c{a,b}) {
+      b00:
+        out = alufn[0];
+      b10:
+        out = alufn[1];
+      b01:
+        out = alufn[2];
+      b11:
+        out = alufn[3];
+    }
+    
+  }
+}

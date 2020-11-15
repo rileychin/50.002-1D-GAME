@@ -1,0 +1,588 @@
+module control_unit (
+    input clk,  // clock
+    input rst,  // reset
+    input red_btn_input,
+    input green_btn_input,
+    input blue_btn_input,
+    input rb_data[10],
+    input ra_data[10],
+    input pointer[5],
+    input difficulty[10],
+    input user_input[10],
+    input slow_clock_in,
+    
+    
+    output red_bits_generated[10],
+    output green_bits_generated[10],
+    output blue_bits_generated[10],
+    output rand_output[2],
+    output user_output[10],
+    
+    
+    //control signals 
+    output alufn[6],
+    output asel[3],
+    output bsel[3],
+    output regfile_write_address[3],
+    output regfile_read_address_a[3],
+    output regfile_read_address_b[3],
+    output we_regfile,
+    output wdsel
+    
+    
+  ) {
+
+  
+  //Control Unit module specifies FSM states 
+  //and control signals corresponding to states
+  //main driver of game
+  counter slowclock(#SIZE(1),#DIV(27), .clk(clk), .rst(rst));
+  
+  //INCLUDE FSM states here
+  .clk(clk){
+   fsm game_fsm = {IDLE, //1
+    CHECK_RED,           //2
+      CHECK_GREEN,       //3
+      CHECK_BLUE,        //4
+      BRANCH_GREEN,      //5 
+      BRANCH_RED,        //6
+      BRANCH_GREEN,      //7
+      BRANCH_BLUE,       //8
+      REMOVE_R0_DATA,    //9
+      REMOVE_R1_DATA,    //10
+      REMOVE_R2_DATA,    //11
+      SUB_POINTER,       //12
+      ADD_SCORE,         //13
+      BRANCH_CHECK_SCORE_60, //14
+      BRANCH_CHECK_SCORE_30, //15
+      BRANCH_CHECK_SCORE_10, //16
+      BRANCH_DIFF_1,     //17
+      SET_DIFF_3,        //18
+      SET_DIFF_2,        //19
+      SET_DIFF_1,        //20
+      SET_DIFF_0,        //21
+      SHIFT_R0_ONE,      //22
+      SHIFT_R1_ONE,      //23
+      SHIFT_R2_ONE,      //24
+      GENERATE_RAND,     //25
+      BRANCH_CHECK_RAND_0, //26
+      BRANCH_CHECK_RAND_1, //27
+      BRANCH_CHECK_RAND_2, //28
+      BRANCH_CHECK_RAND_3, //additional
+      ADD_ONE_RED,       //29
+      ADD_ONE_GREEN,     //30
+      ADD_ONE_BLUE,      //31
+      ADD_ONE_ALL_RED,       //32
+      ADD_ONE_ALL_GREEN,
+      ADD_ONE_ALL_BLUE,
+      ADD_POINTER,       //33
+      CHECK_POINTER,
+      BRANCH_CHECK_POINTER, //34
+      RESET_REGISTERS_R0,
+      RESET_REGISTERS_R1,
+      RESET_REGISTERS_R2,
+      RESET_REGISTERS_R3,
+      RESET_REGISTERS_R4,
+      RESET_REGISTERS_R5,
+      RESET_REGISTERS_R6,
+      RESET_REGISTERS_R7,  //35
+      GAMEOVER};         //36
+    
+      //slow clock assigned in game_beta.luc
+      //counter slow_clock(#SIZE(1),#DIV(26))
+    
+    }
+  
+  always {
+    alufn = 0;
+    asel = 0;
+    bsel = 0;
+    we_regfile = 0;
+    regfile_write_address = 111;
+    regfile_read_address_a = 000;
+    regfile_read_address_b = 000;
+    red_bits_generated = 0;
+    green_bits_generated = 0;
+    blue_bits_generated = 0;
+    rand_output = 0;
+    user_output = 0;
+    wdsel = 1;
+    
+    //check if reset button is pressed, reset all registers
+    if(rst) {
+      game_fsm.d = game_fsm.IDLE;
+      }
+    
+    
+    case(game_fsm.q){
+      
+      game_fsm.IDLE:
+        we_regfile = 0;
+          //CHECK IF RED/GREEN/BLUE BUTTON PRESSED, 
+    if(red_btn_input){
+      game_fsm.d = game_fsm.CHECK_RED;
+      }
+    if(green_btn_input){
+      game_fsm.d = game_fsm.CHECK_GREEN;
+      }
+    if(blue_btn_input){
+      game_fsm.d = game_fsm.CHECK_BLUE;
+      }
+    
+    //shift down every slow clock cycle
+    if(slow_clock_in){
+      game_fsm.d = game_fsm.SHIFT_R0_ONE;
+      }
+      
+       
+        //do comparison of Rx[pointer] in game_beta.luc
+      game_fsm.CHECK_RED:
+         we_regfile = 1;
+         regfile_read_address_b = b000; //read R0
+         regfile_write_address = b111; //write R7
+         asel = b010; //choose user_input
+         bsel = b000; //choose Rb_data
+         alufn = b110011; //CMPEQ
+         wdsel = 1;
+         game_fsm.d = game_fsm.BRANCH_RED;
+        
+      game_fsm.CHECK_GREEN:
+         we_regfile = 1;
+         regfile_read_address_b = b001; //read R1
+         regfile_write_address = b111; //write R7
+         asel = b010; //choose user_input
+         bsel = b000; //choose Rb_data
+         alufn = b110011; //CMPEQ
+         wdsel = 1;
+         game_fsm.d = game_fsm.BRANCH_GREEN;
+        
+        
+      game_fsm.CHECK_GREEN:
+         we_regfile = 1;
+         regfile_read_address_b = b010; //read R2
+         regfile_write_address = b111; //write R7
+         asel = b010; //choose user_input
+         bsel = b000; //choose Rb_data
+         alufn = b110011; //CMPEQ
+         wdsel = 1;
+         game_fsm.d = game_fsm.BRANCH_BLUE;
+        
+       
+      //branch and check for R7 content 
+      game_fsm.BRANCH_RED:
+         we_regfile = 0;
+         regfile_read_address_b = b111;
+         if (rb_data[0] == 1){ //read directly REGFILE rb_data
+           game_fsm.d = game_fsm.REMOVE_R0_DATA;
+          }
+         else{
+           game_fsm.d = game_fsm.SHIFT_R0_ONE;
+          }
+        
+      game_fsm.BRANCH_GREEN:
+         we_regfile = 0;
+         regfile_read_address_b = b111;
+         if (rb_data[0] == 1){ //read directly REGFILE rb_data
+           game_fsm.d = game_fsm.REMOVE_R1_DATA;
+          }
+         else{
+           game_fsm.d = game_fsm.SHIFT_R0_ONE;
+          }
+        
+       game_fsm.BRANCH_BLUE:
+         we_regfile = 0;
+         regfile_read_address_b = b111;
+         if (rb_data[0] == 1){ //read directly REGFILE rb_data
+           game_fsm.d = game_fsm.REMOVE_R2_DATA;
+          }
+         else{
+           game_fsm.d = game_fsm.SHIFT_R0_ONE;
+          }
+        
+       //remove directly from FSM and update REGFILE direct
+       //UNFINISHED havent removed the data from respective register
+       game_fsm.REMOVE_R0_DATA:
+          we_regfile = 1;
+          regfile_read_address_a = b000;
+          regfile_write_address = b000;
+          bsel = b010;
+          game_fsm.d = game_fsm.SUB_POINTER;
+          
+      game_fsm.REMOVE_R1_DATA:
+          we_regfile = 1;
+          regfile_read_address_a = b001;
+          regfile_write_address = b001;
+          bsel = b010;
+          game_fsm.d = game_fsm.SUB_POINTER;
+        
+      game_fsm.REMOVE_R2_DATA:
+          we_regfile = 1;
+          regfile_read_address_a = b000;
+          regfile_write_address = b000;
+          bsel = b010;
+          game_fsm.d = game_fsm.SUB_POINTER;
+        
+        
+      game_fsm.SUB_POINTER:
+          we_regfile = 1;
+          regfile_read_address_a = b100;
+          regfile_write_address = b100;
+          asel = b000;
+          bsel = b011;
+          wdsel = b1;
+          alufn = b000001;
+          game_fsm.d = game_fsm.ADD_SCORE;
+        
+        
+      game_fsm.ADD_SCORE:
+         we_regfile = 1;
+         regfile_read_address_a = b011;
+         regfile_write_address = b011;
+         asel = b000;
+         bsel = b011;
+         wdsel = b1;
+         alufn = b000000;
+         game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_60;
+        
+        
+      game_fsm.BRANCH_CHECK_SCORE_60:
+         we_regfile = 1;
+         regfile_read_address_b = b011;
+         regfile_write_address = b111;
+         asel = b101; //asel = 60
+         bsel = b000; //bsel = rb_data
+         wdsel = 1;
+         alufn = b110111;
+         game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_30;
+         
+        
+      game_fsm.BRANCH_CHECK_SCORE_30:
+         we_regfile = 1;
+         regfile_read_address_a = b111;
+         regfile_read_address_b = b011;
+         regfile_write_address = b111;
+         asel = b100; //asel = 30
+         bsel = b000; //bsel = rb_data
+         wdsel = 1;
+         alufn = b110111; //CMPLE
+         if (ra_data[0] == 1 ){ //reading ra_data from previous result
+          game_fsm.d =game_fsm.SET_DIFF_3;
+          }
+        else{
+          game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_10;
+          }
+        
+       game_fsm.BRANCH_CHECK_SCORE_10:
+         we_regfile = 1;
+         regfile_read_address_a = b111;
+         regfile_read_address_b = b011;
+         regfile_write_address = b111;
+         asel = b011; //asel = 10
+         bsel = b000; //bsel = rb_data
+         wdsel = 1;
+         alufn = b110111; //CMPLE
+         if (ra_data[0] == 1 ){ //reading ra_data from previous result
+          game_fsm.d =game_fsm.SET_DIFF_2;
+          }
+        else{
+          game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_10;
+          }
+        
+      game_fsm.BRANCH_DIFF_1:
+         we_regfile = 0;
+         regfile_read_address_a = b111;
+         if (ra_data[0] == 1 ){ //reading ra_data from previous result
+          game_fsm.d =game_fsm.SET_DIFF_1;
+          }
+        else{
+          game_fsm.d = game_fsm.SET_DIFF_0;
+          }
+       
+       //setting difficulty for game 4 levels
+       game_fsm.SET_DIFF_3:
+         we_regfile = b1;
+         regfile_write_address = b110; //difficulty registers 
+         bsel = b101; //bsel = 3
+         wdsel = b1; 
+         alufn = b011100; // 'B'
+         game_fsm.d = game_fsm.IDLE;
+        
+       game_fsm.SET_DIFF_2:
+         we_regfile = b1;
+         regfile_write_address = b110; //difficulty registers 
+         bsel = b100; //bsel = 2
+         wdsel = b1; 
+         alufn = b011100; // 'B'
+         game_fsm.d = game_fsm.IDLE;
+         
+       game_fsm.SET_DIFF_1:
+         we_regfile = b1;
+         regfile_write_address = b110; //difficulty registers 
+         bsel = b011; //bsel = 1
+         wdsel = b1; 
+         alufn = b011100; // 'B'
+         game_fsm.d = game_fsm.IDLE;
+        
+       game_fsm.SET_DIFF_0:
+         we_regfile = b1;
+         regfile_write_address = b110; //difficulty registers 
+         bsel = b010; //bsel = 0
+         wdsel = b1; 
+         alufn = b011100; // 'B'
+         game_fsm.d = game_fsm.IDLE;
+        
+        
+      //SHIFTING DOWN OF ALL BITS
+      //occurs at every slow clock cycle or invalid input
+      game_fsm.SHIFT_R0_ONE:
+         we_regfile = b1;
+         regfile_read_address_a = b000;
+         regfile_write_address = b000;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b100000; //SHL
+         game_fsm.d = game_fsm.SHIFT_R1_ONE;
+      
+       game_fsm.SHIFT_R1_ONE:
+         we_regfile = b1;
+         regfile_read_address_a = b001;
+         regfile_write_address = b001;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b100000; //SHL
+         game_fsm.d = game_fsm.SHIFT_R2_ONE;
+        
+       game_fsm.SHIFT_R2_ONE:
+         we_regfile = b1;
+         regfile_read_address_a = b010;
+         regfile_write_address = b010;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b100000; //SHL
+         game_fsm.d = game_fsm.GENERATE_RAND;
+        
+       //generate random bits
+       game_fsm.GENERATE_RAND:
+         we_regfile = b1;
+         regfile_read_address_a = b010;
+         regfile_write_address = b101;
+         asel = b010; //asel = 1 (doesnt matter)
+         bsel = b001; //bsel = rand_input
+         wdsel = b1;
+         alufn = b011100; //'B'
+         game_fsm.d = game_fsm.BRANCH_CHECK_RAND_0;
+
+       //checking random = RED
+       game_fsm.BRANCH_CHECK_RAND_0:
+         we_regfile = b1;
+         regfile_read_address_a = b101;
+         regfile_write_address = b101;
+         asel = b000; //asel = ra_data
+         bsel = b010; //bsel  = 0
+         wdsel = b1;
+         alufn  = b110011; //CMPEQ
+         game_fsm.d = game_fsm.BRANCH_CHECK_RAND_1;
+        
+       //checking random = GREEN
+       game_fsm.BRANCH_CHECK_RAND_1:
+         we_regfile = b1;
+         regfile_read_address_a = b101;
+         regfile_write_address = b101;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel  = 1
+         wdsel = b1;
+         alufn  = b110011; //CMPEQ
+         if (ra_data[2] == 1){
+          game_fsm.d = game_fsm.ADD_ONE_RED;
+          }
+        else{
+          game_fsm.d = game_fsm.BRANCH_CHECK_RAND_2;
+          }
+      
+      //checcking random = BLYUE
+      game_fsm.BRANCH_CHECK_RAND_2:
+         we_regfile = b1;
+         regfile_read_address_a = b101;
+         regfile_write_address = b101;
+         asel = b000; //asel = ra_data
+         bsel = b100; //bsel  = 2
+         wdsel = b1;
+         alufn  = b110011; //CMPEQ
+         if (ra_data[3] == 1){
+          game_fsm.d = game_fsm.ADD_ONE_GREEN;
+          }
+        else{
+          game_fsm.d = game_fsm.BRANCH_CHECK_RAND_3;
+          }
+         
+       
+      game_fsm.BRANCH_CHECK_RAND_3:
+         we_regfile = b1;
+         regfile_read_address_a = b101;
+         if (ra_data[4] == 1){
+          game_fsm.d = game_fsm.ADD_ONE_BLUE;
+          }
+        else{
+          game_fsm.d = game_fsm.ADD_ONE_ALL_RED;
+          }
+        
+      game_fsm.ADD_ONE_RED:
+         we_regfile = b1;
+         regfile_read_address_a = b000; //R0 red register
+         regfile_write_address = b000;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b000000; //add
+         game_fsm.d = game_fsm.ADD_POINTER;
+        
+      game_fsm.ADD_ONE_GREEN:
+         we_regfile = b1;
+         regfile_read_address_a = b001; //R1 green register
+         regfile_write_address = b001;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b000000; //add
+         game_fsm.d = game_fsm.ADD_POINTER;
+        
+      game_fsm.ADD_ONE_BLUE:
+         we_regfile = b1;
+         regfile_read_address_a = b010; //R2 red register
+         regfile_write_address = b010;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b000000; //add
+         game_fsm.d = game_fsm.ADD_POINTER;
+        
+        
+      game_fsm.ADD_ONE_ALL_RED:
+         we_regfile = b1;
+         regfile_read_address_a = b000; //R0 red register
+         regfile_write_address = b000;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b000000; //add
+         game_fsm.d = game_fsm.ADD_ONE_ALL_GREEN;
+        
+      game_fsm.ADD_ONE_ALL_GREEN:
+         we_regfile = b1;
+         regfile_read_address_a = b001; //R0 red register
+         regfile_write_address = b001;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b000000; //add
+         game_fsm.d = game_fsm.ADD_ONE_ALL_BLUE;
+        
+      game_fsm.ADD_ONE_ALL_BLUE:
+         we_regfile = b1;
+         regfile_read_address_a = b010; //R0 red register
+         regfile_write_address = b010;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn = b000000; //add
+         game_fsm.d = game_fsm.ADD_POINTER;
+        
+      //after shifting and adding, we increase the pointer
+      game_fsm.ADD_POINTER:
+         we_regfile = b1;
+         regfile_read_address_a = b100;
+         regfile_write_address = b100;
+         asel = b000; //asel = ra_data
+         bsel = b011; //bsel = 1
+         wdsel = b1;
+         alufn= b000000;
+         game_fsm.d = game_fsm.CHECK_POINTER;
+        
+        
+      //checking if pointer has reached the bottom
+      game_fsm.CHECK_POINTER:
+         we_regfile = b1;
+         regfile_read_address_a = b100;
+         regfile_write_address = b111; //written as b011 in fsm,changed it because not sure if its actually correct
+         //not sure if writing back to player score is correct 
+         asel = b000; //asel = ra_data
+         bsel = b110; //bsel = 10
+         wdsel = b1;
+         alufn = b110011;
+         
+      //reading from previous state
+      game_fsm.BRANCH_CHECK_POINTER:
+         we_regfile = b1;
+         regfile_read_address_a = b111; //read from temp storage
+        
+         if(ra_data[0] == 1){
+           game_fsm.d = game_fsm.RESET_REGISTERS_R0;
+          }
+         else{
+          game_fsm.d = game_fsm.IDLE;
+          }
+        
+      game_fsm.RESET_REGISTERS_R0:
+         we_regfile = b1;
+         regfile_write_address = b000;
+         wdsel = 0;
+         game_fsm.d = game_fsm.RESET_REGISTERS_R1;
+ 
+      game_fsm.RESET_REGISTERS_R1:
+         we_regfile = b1;
+         regfile_write_address = b001;
+         wdsel = 0;
+         game_fsm.d = game_fsm.RESET_REGISTERS_R2;      
+        
+      game_fsm.RESET_REGISTERS_R2:
+         we_regfile = b1;
+         regfile_write_address = b010;
+         wdsel = 0;
+         game_fsm.d = game_fsm.RESET_REGISTERS_R3; 
+         
+      game_fsm.RESET_REGISTERS_R3:
+         we_regfile = b1;
+         regfile_write_address = b011;
+         wdsel = 0;
+         game_fsm.d = game_fsm.RESET_REGISTERS_R4;
+
+       game_fsm.RESET_REGISTERS_R4:
+         we_regfile = b1;
+         regfile_write_address = b100;
+         wdsel = 0;
+         game_fsm.d = game_fsm.RESET_REGISTERS_R5;
+      
+       game_fsm.RESET_REGISTERS_R5:
+         we_regfile = b1;
+         regfile_write_address = b101;
+         wdsel = 0;
+         game_fsm.d = game_fsm.RESET_REGISTERS_R6;
+       
+       game_fsm.RESET_REGISTERS_R6:
+         we_regfile = b1;
+         regfile_write_address = b110;
+         wdsel = 0;
+         game_fsm.d = game_fsm.RESET_REGISTERS_R7;
+        
+       game_fsm.RESET_REGISTERS_R7:
+         we_regfile = b1;
+         regfile_write_address = b111;
+         wdsel = 0;
+         game_fsm.d = game_fsm.GAMEOVER;
+        
+      game_fsm.GAMEOVER:
+         we_regfile = b0;
+         if (red_btn_input || green_btn_input || blue_btn_input){
+          game_fsm.d = game_fsm.IDLE;
+          }
+        else{
+          game_fsm.d = game_fsm.GAMEOVER;
+          }
+                         
+      }
+    
+  }
+}

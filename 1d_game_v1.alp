@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="1d_game_v1" board="Alchitry Au" language="Lucid" version="3">
+  <files>
+    <src>alu.luc</src>
+    <src>adder.luc</src>
+    <src>game_beta.luc</src>
+    <src>sixteen_bit_adder.luc</src>
+    <src>seven_seg.luc</src>
+    <src>shifter.luc</src>
+    <component>counter.luc</component>
+    <src>regfile.luc</src>
+    <src>comparator.luc</src>
+    <component>decoder.luc</component>
+    <src>multi_seven_seg.luc</src>
+    <src>multiplier.luc</src>
+    <src>boolean.luc</src>
+    <component>pn_gen.luc</component>
+    <src>sixteen_bit_boolean.luc</src>
+    <component>reset_conditioner.luc</component>
+    <src>control_unit.luc</src>
+    <component>edge_detector.luc</component>
+    <src>rand_increment.luc</src>
+    <src top="true">au_top.luc</src>
+    <constraint lib="true">alchitry.acf</constraint>
+    <constraint lib="true">au.xdc</constraint>
+  </files>
+</project>

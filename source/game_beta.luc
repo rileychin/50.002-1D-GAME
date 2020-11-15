@@ -1,0 +1,70 @@
+module game_beta (
+    input clk,  // clock
+    input rst,  // reset
+    input red_btn_input,
+    input green_btn_input,
+    input blue_btn_input,
+    
+    output out
+
+  ) {
+  
+  sig inputAlu_a[10];
+  sig inputAlu_b[10];
+
+  sig current_pointer[10];
+  
+  //setup slow clock as input,one difficulty for now
+ 
+  .clk(clk){
+
+  
+    .rst(rst){
+      
+      alu game_alu;
+      control_unit game_controlunit;
+      regfile players;
+      counter slow_timer(#SIZE(1),#DIV(26));
+      }
+    }
+
+  always {
+    out = 0;
+    inputAlu_a = 0;
+    inputAlu_b = 0;
+    current_pointer = players.pointer_out;
+    if(red_btn_input){
+    
+      }
+    
+    case(game_controlunit.asel){
+        b000: inputAlu_a = players.read_data_1; //reading Ra input
+        b001: inputAlu_a = b1; //user input always 1, is just selecting which register(R0,R1,R2) to compare to 
+        b010: inputAlu_a = b0000000001; //1 in binary 10 bits
+        b011: inputAlu_a = b0000001010; //10 in binary 10 bits
+        b100: inputAlu_a = b0000011110; //30 in binary 10 bits
+        b101: inputAlu_a = b0000111100; //60 in binary 10 bits
+      }
+    
+    case(game_controlunit.bsel){
+      b000: inputAlu_b = players.read_data_2; //reading Rb input
+      //b001: inputAlu_b = rand_number //reading random number
+      b010: inputAlu_b = b0000000000; //0 in binary 10 bits
+      b011: inputAlu_b = b0000000001; //1 in binary 10 bits
+      b100: inputAlu_b = b0000000010; //2 in binary 10 bits
+      b101: inputAlu_b = b0000000011; //3 in binary 10 bits
+      b110: inputAlu_b = b0000001010; //10 in binary 10 bits
+      }
+    //ALU check
+    //Using 16 bits ALU
+    game_alu.a = inputAlu_a;
+    game_alu.b = inputAlu_b;
+    game_alu.alufn = game_controlunit.alufn; //outputs of ALU here
+    
+    case (game_controlunit.wdsel){
+      b1: players.write_data = game_alu.out; //selecting ALU output
+      b0: players.write_data = b0; //only in event of reset
+      default: players.write_data = game_alu.out;
+      }
+  }
+}

@@ -1,0 +1,85 @@
+module regfile (
+    input clk,  // clock
+    input read_address_1[3], //read and write 10 bits of data in 
+    input read_address_2[3], //read and write 10 bits of data in 
+    input write_address[3], // same as above
+    input write_data[10], //overwrite all 10 bits from each register
+    input write_enable,
+    input rst, // reset
+    output read_data_1[10], //read first register to do computation
+    output read_data_2[10], //read second register to do computation
+    output pointer_out[10]
+  ) {
+  
+  //REGFILE contains all information to each register 
+  //7 registers to store information, labeled with named instead of assigning a number
+   .clk(clk){
+    .rst(rst){
+      dff row_red[10]; //first column depicting red
+      dff row_green[10]; //second column depicting green
+      dff row_blue[10]; //third column depicting blue
+      dff current_score[10]; //register for score check
+      dff pointer[10]; //register for pointer(only need to use 3 bits),10 bits for convenience
+      dff rand_register[10];
+      dff temp_var[10]; //temporary storage register
+      dff current_timer[10]; //timer for game counter
+      
+    }
+  }
+  //REGSITER ADDRESS DEFINITION
+  // 000 : R0 : row_red
+  // 001 : R1 : row_green
+  // 010 : R2 : row_blue
+  // 011 : R3 : current_score
+  // 100 : R4 : pointer
+  // 101 : R5 : rand_register
+  // 110 : R6 : current timer
+  // 111 : R7 : output_register
+  
+  //16 registers for registers 
+  always {
+  
+    //write back for write enable
+    if (write_enable){
+    //writing data back to registers
+      case(write_address){
+        b000: row_red.d = write_data;
+        b001: row_green.d = write_data;
+        b010: row_blue.d = write_data;
+        b011: current_score.d = write_data;
+        b100: pointer.d = write_data;
+        b101: rand_register.d = write_data;
+        b110: current_timer.d = write_data;
+        b111: temp_var.d = write_data;
+        }
+    }      
+      
+      
+      case (read_address_1){
+        b000: read_data_1 = row_red.q;
+        b001: read_data_1 = row_green.q;
+        b010: read_data_1 = row_blue.q;
+        b011: read_data_1 = current_score.q;
+        b100: read_data_1 = pointer.q;
+        b101: read_data_1 = rand_register.q;
+        b110: read_data_1 = current_timer.q;
+        b111: read_data_1 = temp_var.q;
+        default: read_data_1 = 10b0;
+        }
+      
+      
+      case(read_address_2){
+        b000: read_data_2 = row_red.q;
+        b001: read_data_2 = row_green.q;
+        b010: read_data_2 = row_blue.q;
+        b011: read_data_2 = current_score.q;
+        b100: read_data_2 = pointer.q;
+        b101: read_data_2 = rand_register.q;
+        b110: read_data_2 = current_timer.q;
+        b111: read_data_2 = temp_var.q;
+        default: read_data_2 = 10b0;
+        }
+    
+    pointer_out = pointer.q;
+  }
+}

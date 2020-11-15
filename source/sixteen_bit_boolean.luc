@@ -1,0 +1,19 @@
+module sixteen_bit_boolean (
+    input a[16],
+    input b[16],
+    input alufn[4],    // boolean module requires alufn[3:0] to work
+    output out[16]
+  ) {
+  
+  boolean oneBitBool[16];    // initialise one boolean module for each pair of input bit 
+
+  always {
+    // feeding input and alufn to boolean module
+    oneBitBool.a = a;
+    oneBitBool.b = b;
+    oneBitBool.alufn = 16x{{alufn}};
+    
+    // 16 bit output produced by 16 boolean units
+    out = oneBitBool.out;
+  }
+}

@@ -1,0 +1,25 @@
+module comparator (
+    input z,
+    input n,
+    input v,
+    input alufn[2],
+    output out
+  ) {
+     
+  sig i, j;  // intermediate variables
+
+  always {
+    i = n ^ v;  // condition for A < B
+    j = i | z;  // condition for A <= B
+    
+    out = b0;
+    case (alufn) {
+      b10:  // A < B
+        out = i;
+      b01:  // A == B
+        out = z;
+      b11:  // A <= B
+        out = j;
+      }
+  }
+}

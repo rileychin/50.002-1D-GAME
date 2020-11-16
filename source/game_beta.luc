@@ -13,7 +13,8 @@ module game_beta (
     //debug 
     //input button_in,
     output debug_out[10],
-    output debug_out_2[10]
+    output debug_out_2[10],
+    output debug_out_3[10]
     //output timer_out[10]
 
   ) {
@@ -32,7 +33,7 @@ module game_beta (
       alu game_alu;
       control_unit game_controlunit;
       regfile players;
-      //add a slow clock timer to add 
+      //add a slow clock timer to add (modularize), can retrieve back as a value
       counter slow_timer_0(#SIZE(1),#DIV(26)); //1 block/s
       counter slow_timer_1(#SIZE(1),#DIV(25)); //2 block/s
       counter slow_timer_2(#SIZE(1),#DIV(24)); //4 block/s
@@ -85,7 +86,9 @@ module game_beta (
     //bootstrap Ra & Rb data straight to FSM
     game_controlunit.ra_data = players.ra_out;
     game_controlunit.rb_data = players.rb_out;
-
+    
+    //feed constant pointer value to control_unit
+    game_controlunit.pointer_value = players.pointer_out;
     
     //red_btn_input
     game_controlunit.red_btn_input = red_btn_input;
@@ -100,7 +103,7 @@ module game_beta (
     current_pointer = players.pointer_out;
     
     
-    //random input converted into 10 bits
+    //random input converted into 10 bits, have to put this into a ROM 
     if(random_input == b00){
       rand_tenbits = b0000000100; //write back direct Ra[2] = 1 red
       }
@@ -166,16 +169,19 @@ module game_beta (
       }
       
     //for debug purposes
-    debug_out = players.current_timer_out; //debug for checking CURRENT STATE
+    debug_out = players.current_timer_out; //debug for checking 
     
     //debug_out_2 = players.pointer_out; //debug for checking pointer value
     //debug_out_2 = players.rand_register_out; 
     debug_out_2 = players.row_red_out; //debug for checking red row
-
+    
+    debug_out_3 = players.pointer_out;
     //things that work
     //1. pointer increase to 10 then game over 
     //2. shifting R0,R1,R2 content and adding based on generated bits
     //3. updating random register from generated random bits
-    //4. (not working) currently testing score & difficulty relationship 
+    //4. score & difficulty relationship (hard coded several score inputs)
+    //5. (now testing) red,green,blue button input corresponding to pointer (trying with red now first )
+    //5.1 correct button input reduces pointer, BUT DOESNT REMOVE Rx bits. (edit in regfile)
   }
 }

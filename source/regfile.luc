@@ -115,7 +115,7 @@ module regfile (
     row_red_out = row_red.q;
     row_green_out = row_green.q;
     row_blue_out = row_blue.q;
-    pointer_out = pointer.q;
+    pointer_out = pointer.q; //resolve going below 0 issue
     rand_register_out = rand_register.q;
     current_timer_out = current_timer.q;
     

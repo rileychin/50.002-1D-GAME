@@ -11,6 +11,7 @@ module control_unit (
     //input user_input[10],
     input slow_clock_in,   
     input score_simulate,
+    input pointer_value[10],
     
     
     output red_bits_generated[10],
@@ -242,6 +243,10 @@ module control_unit (
         
         
       game_fsm.SUB_POINTER:
+        if(pointer_value == b0000000000){ //if pointer is at 0, no need to SUB again
+          game_fsm.d = game_fsm.ADD_SCORE;
+            }
+        else{
           we_regfile = 1;
           regfile_read_address_a = b100;
           regfile_write_address = b100;
@@ -251,7 +256,8 @@ module control_unit (
           alufn = b000001;
           current_state = b001011;
           game_fsm.d = game_fsm.ADD_SCORE;
-        
+            }
+
         
       game_fsm.ADD_SCORE:
          we_regfile = 1;

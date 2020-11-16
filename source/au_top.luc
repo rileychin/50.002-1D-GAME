@@ -37,7 +37,7 @@ module au_top (
     
     gameMachine.random_input = random.out;
     //temporary add 0 red,green,blue input values
-    gameMachine.red_btn_input = 0;
+    //gameMachine.red_btn_input = 0;
     gameMachine.green_btn_input = 0;
     gameMachine.blue_btn_input = 0;
     
@@ -55,9 +55,14 @@ module au_top (
     buttondetector.in[2] = buttoncond.out[2];
     gameMachine.score_60 = buttondetector.out[2];
     
+    buttoncond.in[3] = io_button[3];
+    buttondetector.in[3] = buttoncond.out[3];
+    gameMachine.red_btn_input = buttondetector.out[3]; //temporary test button for game 
+    
     io_led[1][1:0] = random.out;
-    io_led[2][7:0] = gameMachine.debug_out[9:2];
-    io_led[1][7:6] = gameMachine.debug_out[1:0];
+    io_led[2][7:0] = gameMachine.debug_out_3[9:2];
+    io_led[1][7:6] = gameMachine.debug_out_3[1:0];
+    io_led[1][3:2] = gameMachine.debug_out[1:0];
     io_led[0] = gameMachine.debug_out_2;
   }
 }

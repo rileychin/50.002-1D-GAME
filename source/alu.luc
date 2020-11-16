@@ -4,9 +4,9 @@ module alu (
     input a[16],
     input b[16],
     input alufn[6],
-    output out[16],
-    output seg_out[8],
-    output sel_out[4]
+    output out[16]
+    //output seg_out[8],
+    //output sel_out[4]
   ) {
   
   sig actual_output[16];  // temporary variables
@@ -20,9 +20,6 @@ module alu (
   
   
   .clk(clk), .rst(rst) {
-  
-    multi_seven_seg seg;
-
   }
 
   always {
@@ -50,9 +47,6 @@ module alu (
     
     // INITIALIZE TESTING MODE MODULE INPUT
    
-    
-    //INITIALIZE 7 SEG BITS: DEFAULT ALL TO EMPTY
-    seg.values = {8h10,8h10,8h10,8h10};
    
     // INITIALIZE TEMPORARY VARIABLES
     actual_output = 16b0000000000000000;
@@ -78,9 +72,6 @@ module alu (
           // setting output  
           actual_output = alu_mul.out;
       }
-      else {
-        seg.values = {8h10,8h0E,8h0F,8h0F};
-      }
                  
       b01:  // BOOLEAN
         // A: 011010; XOR: 010110; OR: 011110; AND: 011000; NOTA:010101; B:011100; NOTB: 010011; NAND: 010111; NOR: 010001; NXOR: 011001;
@@ -92,10 +83,6 @@ module alu (
             // setting output  
             actual_output = alu_boole.out;
           
-        } else {
-          // INVALID ALUFN
-          seg.values = {8h10,8h0E,8h0F,8h0F};
-
         }
         
       b10:  // SHIFTER
@@ -107,9 +94,6 @@ module alu (
             alu_shift.alufn = alufn;
             // setting output  
             actual_output = alu_shift.s;
-        } else {
-          // invalid ALUFN
-          seg.values = {8h10,8h0E,8h0F,8h0F};
         }
         
         
@@ -132,16 +116,8 @@ module alu (
             // setting output  
             actual_output = alu_cmp.out;
         }
-          else {
-          // invalid ALUFN
-          seg.values = {8h10,8h0E,8h0F,8h0F};
-        }
         
     }
     out = actual_output;
-   
-    //not using this, all other else statements not removed
-    seg_out = ~seg.seg;  // connect segments to counter
-    sel_out = ~seg.sel;  // connect digit select to counter
   }
 }

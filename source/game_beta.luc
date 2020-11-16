@@ -6,8 +6,8 @@ module game_beta (
     input blue_btn_input,
     input random_input[2],
     
-    output debug_out[10],
-    output timer_out[10]
+    output debug_out[10]
+    //output timer_out[10]
 
   ) {
   
@@ -18,11 +18,10 @@ module game_beta (
   sig rand_tenbits[10];
   
   //setup slow clock as input,one difficulty for now
- 
+  
   .clk(clk){
 
     edge_detector clock_detector(#RISE(1),#FALL(0));
-    //edge_detector button_detector[3](#RISE(1),#FALL(0));    
   
     .rst(rst){
       
@@ -34,37 +33,51 @@ module game_beta (
     }
 
   always {
-    debug_out = 0;
-    timer_out = 0;
+    //debug_out = 0;
+    //timer_out = 0;
     inputAlu_a = 0;
     inputAlu_b = 0;
     rand_tenbits = 0;
-    current_pointer = players.pointer_out;
+    //current_pointer = players.pointer_out;
     clock_detector.in = slow_timer.value;
+    //clock_detector.in = 0;
+    players.write_data = 0;
     
     //initialize WE for regfile
     players.write_enable = game_controlunit.we_regfile;
     players.write_address = game_controlunit.regfile_write_address;
     
+    players.write_enable = 0;
+    players.write_address = 0;
+    
     //read address A and B
     players.read_address_1 = game_controlunit.regfile_read_address_a;
     players.read_address_2 = game_controlunit.regfile_read_address_b;
+    
+    //players.read_address_1 = 0;
+    //players.read_address_2 = 0;
+    
     
     //bootstrap Ra & Rb data straight to FSM
     game_controlunit.ra_data = players.ra_out;
     game_controlunit.rb_data = players.rb_out;
     
+    //game_controlunit.ra_data = 0;
+    //game_controlunit.rb_data = 0;
+    
+    
     //increase slow_clock each time 
     game_controlunit.slow_clock_in = clock_detector.out;
     
+    
     //red_btn_input
-    game_controlunit.red_btn_input = red_btn_input;
+    game_controlunit.red_btn_input = 0;
     
     //green_btn_input
-    game_controlunit.green_btn_input = green_btn_input;
+    game_controlunit.green_btn_input = 0;
     
     //blue_btn_input
-    game_controlunit.blue_btn_input = blue_btn_input;
+    game_controlunit.blue_btn_input = 0;
     
     //random input converted into 10 bits
     if(random_input == b00){
@@ -102,7 +115,9 @@ module game_beta (
     //Using 16 bits ALU
     game_alu.a = inputAlu_a;
     game_alu.b = inputAlu_b;
-    game_alu.alufn = game_controlunit.alufn; //outputs of ALU here
+    //game_alu.alufn = game_controlunit.alufn; //outputs of ALU here
+    game_alu.alufn = 0;
+    
     
     case (game_controlunit.wdsel){
       b1: players.write_data = game_alu.out; //selecting ALU output

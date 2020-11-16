@@ -42,8 +42,7 @@ module control_unit (
    fsm game_fsm = {IDLE, //1
     CHECK_RED,           //2
       CHECK_GREEN,       //3
-      CHECK_BLUE,        //4
-      BRANCH_GREEN,      //5 
+      CHECK_BLUE,        //4 
       BRANCH_RED,        //6
       BRANCH_GREEN,      //7
       BRANCH_BLUE,       //8
@@ -110,9 +109,10 @@ module control_unit (
     //check if reset button is pressed, reset all registers
     if(rst) {
       game_fsm.d = game_fsm.IDLE;
-      }
+      }    
     
     
+    else{
     case(game_fsm.q){
       
       game_fsm.IDLE:
@@ -121,18 +121,20 @@ module control_unit (
     if(red_btn_input){
       game_fsm.d = game_fsm.CHECK_RED;
       }
-    if(green_btn_input){
+    else if(green_btn_input){
       game_fsm.d = game_fsm.CHECK_GREEN;
       }
-    if(blue_btn_input){
+    else if(blue_btn_input){
       game_fsm.d = game_fsm.CHECK_BLUE;
       }
     
     //shift down every slow clock cycle
-    if(slow_clock_in){
+    else if(slow_clock_in){
       game_fsm.d = game_fsm.SHIFT_R0_ONE;
       }
-      
+    else{
+      game_fsm.d = game_fsm.IDLE;  
+      }  
        
         //do comparison of Rx[pointer] in game_beta.luc
       game_fsm.CHECK_RED:
@@ -511,6 +513,7 @@ module control_unit (
          bsel = b110; //bsel = 10
          wdsel = b1;
          alufn = b110011;
+         game_fsm.d = game_fsm.BRANCH_CHECK_POINTER;
          
       //reading from previous state
       game_fsm.BRANCH_CHECK_POINTER:
@@ -524,6 +527,7 @@ module control_unit (
           game_fsm.d = game_fsm.IDLE;
           }
         
+      //resetting all resets to 0 
       game_fsm.RESET_REGISTERS_R0:
          we_regfile = b1;
          regfile_write_address = b000;
@@ -582,6 +586,7 @@ module control_unit (
           }
                          
       }
+    }
     
   }
 }

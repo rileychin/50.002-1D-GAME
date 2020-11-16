@@ -13,7 +13,6 @@ module au_top (
   
   sig rst;                  // reset signal
 
-
   .clk(clk) {
     game_beta gameMachine(.rst(rst));
     // The reset conditioner is used to synchronize the reset signal to the FPGA

@@ -9,14 +9,14 @@ module control_unit (
     //input pointer[5],
     //input difficulty[10],
     //input user_input[10],
-    input slow_clock_in,
-    
+    input slow_clock_in,   
     
     output red_bits_generated[10],
     output green_bits_generated[10],
     output blue_bits_generated[10],
     output rand_output[2],
     output user_output[10],
+    output current_state[6], //USED SOLELY FOR DEBUG PURPOSES, checks which state the FSM is currently in 
     
     
     //control signals 
@@ -86,9 +86,6 @@ module control_unit (
       RESET_REGISTERS_R7,  //35
       GAMEOVER};         //36
     
-      //slow clock assigned in game_beta.luc
-      //counter slow_clock(#SIZE(1),#DIV(26))
-    
     }
   
   always {
@@ -105,6 +102,7 @@ module control_unit (
     rand_output = 0;
     user_output = 0;
     wdsel = 1;
+    current_state = 0;
     
     //check if reset button is pressed, reset all registers
     if(rst) {
@@ -117,6 +115,7 @@ module control_unit (
       
       game_fsm.IDLE:
         we_regfile = 0;
+          current_state = b000001;
           //CHECK IF RED/GREEN/BLUE BUTTON PRESSED, 
     if(red_btn_input){
       game_fsm.d = game_fsm.CHECK_RED;
@@ -127,11 +126,11 @@ module control_unit (
     else if(blue_btn_input){
       game_fsm.d = game_fsm.CHECK_BLUE;
       }
-    
     //shift down every slow clock cycle
     else if(slow_clock_in){
       game_fsm.d = game_fsm.SHIFT_R0_ONE;
       }
+    //remain at idle
     else{
       game_fsm.d = game_fsm.IDLE;  
       }  
@@ -145,6 +144,7 @@ module control_unit (
          bsel = b000; //choose Rb_data
          alufn = b110011; //CMPEQ
          wdsel = 1;
+          current_state = b000010;
          game_fsm.d = game_fsm.BRANCH_RED;
         
       game_fsm.CHECK_GREEN:
@@ -155,8 +155,8 @@ module control_unit (
          bsel = b000; //choose Rb_data
          alufn = b110011; //CMPEQ
          wdsel = 1;
+         current_state = b000011;
          game_fsm.d = game_fsm.BRANCH_GREEN;
-        
         
       game_fsm.CHECK_GREEN:
          we_regfile = 1;
@@ -166,6 +166,7 @@ module control_unit (
          bsel = b000; //choose Rb_data
          alufn = b110011; //CMPEQ
          wdsel = 1;
+         current_state = b000100;
          game_fsm.d = game_fsm.BRANCH_BLUE;
         
        
@@ -173,6 +174,7 @@ module control_unit (
       game_fsm.BRANCH_RED:
          we_regfile = 0;
          regfile_read_address_b = b111;
+         current_state = b000101;
          if (rb_data[0] == 1){ //read directly REGFILE rb_data
            game_fsm.d = game_fsm.REMOVE_R0_DATA;
           }
@@ -183,6 +185,7 @@ module control_unit (
       game_fsm.BRANCH_GREEN:
          we_regfile = 0;
          regfile_read_address_b = b111;
+         current_state = b000110;
          if (rb_data[0] == 1){ //read directly REGFILE rb_data
            game_fsm.d = game_fsm.REMOVE_R1_DATA;
           }
@@ -193,6 +196,7 @@ module control_unit (
        game_fsm.BRANCH_BLUE:
          we_regfile = 0;
          regfile_read_address_b = b111;
+         current_state = b000111;
          if (rb_data[0] == 1){ //read directly REGFILE rb_data
            game_fsm.d = game_fsm.REMOVE_R2_DATA;
           }
@@ -207,6 +211,7 @@ module control_unit (
           regfile_read_address_a = b000;
           regfile_write_address = b000;
           bsel = b010;
+          current_state = b001000;
           game_fsm.d = game_fsm.SUB_POINTER;
           
       game_fsm.REMOVE_R1_DATA:
@@ -214,6 +219,7 @@ module control_unit (
           regfile_read_address_a = b001;
           regfile_write_address = b001;
           bsel = b010;
+          current_state = b001001;
           game_fsm.d = game_fsm.SUB_POINTER;
         
       game_fsm.REMOVE_R2_DATA:
@@ -221,6 +227,7 @@ module control_unit (
           regfile_read_address_a = b000;
           regfile_write_address = b000;
           bsel = b010;
+          current_state = b001010;
           game_fsm.d = game_fsm.SUB_POINTER;
         
         
@@ -232,6 +239,7 @@ module control_unit (
           bsel = b011;
           wdsel = b1;
           alufn = b000001;
+          current_state = b001011;
           game_fsm.d = game_fsm.ADD_SCORE;
         
         
@@ -243,6 +251,7 @@ module control_unit (
          bsel = b011;
          wdsel = b1;
          alufn = b000000;
+         current_state = b001100;
          game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_60;
         
         
@@ -254,6 +263,7 @@ module control_unit (
          bsel = b000; //bsel = rb_data
          wdsel = 1;
          alufn = b110111;
+         current_state = b001101;
          game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_30;
          
         
@@ -266,6 +276,7 @@ module control_unit (
          bsel = b000; //bsel = rb_data
          wdsel = 1;
          alufn = b110111; //CMPLE
+         current_state = b001110;
          if (ra_data[0] == 1 ){ //reading ra_data from previous result
           game_fsm.d =game_fsm.SET_DIFF_3;
           }
@@ -282,6 +293,7 @@ module control_unit (
          bsel = b000; //bsel = rb_data
          wdsel = 1;
          alufn = b110111; //CMPLE
+          current_state = b001111;
          if (ra_data[0] == 1 ){ //reading ra_data from previous result
           game_fsm.d =game_fsm.SET_DIFF_2;
           }
@@ -292,6 +304,7 @@ module control_unit (
       game_fsm.BRANCH_DIFF_1:
          we_regfile = 0;
          regfile_read_address_a = b111;
+          current_state = b010000;
          if (ra_data[0] == 1 ){ //reading ra_data from previous result
           game_fsm.d =game_fsm.SET_DIFF_1;
           }
@@ -306,6 +319,7 @@ module control_unit (
          bsel = b101; //bsel = 3
          wdsel = b1; 
          alufn = b011100; // 'B'
+          current_state = b010001;
          game_fsm.d = game_fsm.IDLE;
         
        game_fsm.SET_DIFF_2:
@@ -314,6 +328,7 @@ module control_unit (
          bsel = b100; //bsel = 2
          wdsel = b1; 
          alufn = b011100; // 'B'
+          current_state = b010010;
          game_fsm.d = game_fsm.IDLE;
          
        game_fsm.SET_DIFF_1:
@@ -322,6 +337,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1; 
          alufn = b011100; // 'B'
+          current_state = b010011;
          game_fsm.d = game_fsm.IDLE;
         
        game_fsm.SET_DIFF_0:
@@ -330,6 +346,7 @@ module control_unit (
          bsel = b010; //bsel = 0
          wdsel = b1; 
          alufn = b011100; // 'B'
+          current_state = b010100;
          game_fsm.d = game_fsm.IDLE;
         
         
@@ -343,6 +360,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b100000; //SHL
+          current_state = b010101;
          game_fsm.d = game_fsm.SHIFT_R1_ONE;
       
        game_fsm.SHIFT_R1_ONE:
@@ -353,6 +371,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b100000; //SHL
+          current_state = b010110;
          game_fsm.d = game_fsm.SHIFT_R2_ONE;
         
        game_fsm.SHIFT_R2_ONE:
@@ -363,39 +382,42 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b100000; //SHL
+          current_state = b010111;
          game_fsm.d = game_fsm.GENERATE_RAND;
         
-       //generate random bits
+          //issue is it stores back back 101 value of updated CMPEQ 
+       //generate random bits AND STORE 
        game_fsm.GENERATE_RAND:
          we_regfile = b1;
-         regfile_read_address_a = b010;
-         regfile_write_address = b101;
-         asel = b010; //asel = 1 (doesnt matter)
+         regfile_write_address = b101; //generate and store value in RAND_REGISTER
          bsel = b001; //bsel = rand_input
          wdsel = b1;
          alufn = b011100; //'B'
+          current_state = b011000;
          game_fsm.d = game_fsm.BRANCH_CHECK_RAND_0;
 
        //checking random = RED
        game_fsm.BRANCH_CHECK_RAND_0:
-         we_regfile = b1;
+         we_regfile = b0;
          regfile_read_address_a = b101;
          regfile_write_address = b101;
          asel = b000; //asel = ra_data
          bsel = b010; //bsel  = 0
          wdsel = b1;
          alufn  = b110011; //CMPEQ
+          current_state = b011001;
          game_fsm.d = game_fsm.BRANCH_CHECK_RAND_1;
         
        //checking random = GREEN
        game_fsm.BRANCH_CHECK_RAND_1:
-         we_regfile = b1;
+         we_regfile = b0;
          regfile_read_address_a = b101;
          regfile_write_address = b101;
          asel = b000; //asel = ra_data
          bsel = b011; //bsel  = 1
          wdsel = b1;
          alufn  = b110011; //CMPEQ
+          current_state = b011010;
          if (ra_data[2] == 1){
           game_fsm.d = game_fsm.ADD_ONE_RED;
           }
@@ -403,26 +425,27 @@ module control_unit (
           game_fsm.d = game_fsm.BRANCH_CHECK_RAND_2;
           }
       
-      //checcking random = BLYUE
+      //checking random = BLUE
       game_fsm.BRANCH_CHECK_RAND_2:
-         we_regfile = b1;
+         we_regfile = b0;
          regfile_read_address_a = b101;
          regfile_write_address = b101;
          asel = b000; //asel = ra_data
          bsel = b100; //bsel  = 2
          wdsel = b1;
          alufn  = b110011; //CMPEQ
+          current_state = b011011;
          if (ra_data[3] == 1){
           game_fsm.d = game_fsm.ADD_ONE_GREEN;
           }
         else{
           game_fsm.d = game_fsm.BRANCH_CHECK_RAND_3;
           }
-         
        
       game_fsm.BRANCH_CHECK_RAND_3:
-         we_regfile = b1;
+         we_regfile = b0;
          regfile_read_address_a = b101;
+          current_state = b011100;
          if (ra_data[4] == 1){
           game_fsm.d = game_fsm.ADD_ONE_BLUE;
           }
@@ -438,6 +461,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b000000; //add
+          current_state = b011101;
          game_fsm.d = game_fsm.ADD_POINTER;
         
       game_fsm.ADD_ONE_GREEN:
@@ -448,6 +472,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b000000; //add
+          current_state = b011110;
          game_fsm.d = game_fsm.ADD_POINTER;
         
       game_fsm.ADD_ONE_BLUE:
@@ -458,9 +483,10 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b000000; //add
+          current_state = b011111;
          game_fsm.d = game_fsm.ADD_POINTER;
-        
-        
+
+          
       game_fsm.ADD_ONE_ALL_RED:
          we_regfile = b1;
          regfile_read_address_a = b000; //R0 red register
@@ -469,6 +495,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b000000; //add
+          current_state = b100000;
          game_fsm.d = game_fsm.ADD_ONE_ALL_GREEN;
         
       game_fsm.ADD_ONE_ALL_GREEN:
@@ -479,6 +506,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b000000; //add
+          current_state = b100001;
          game_fsm.d = game_fsm.ADD_ONE_ALL_BLUE;
         
       game_fsm.ADD_ONE_ALL_BLUE:
@@ -489,6 +517,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn = b000000; //add
+          current_state = b100010;
          game_fsm.d = game_fsm.ADD_POINTER;
         
       //after shifting and adding, we increase the pointer
@@ -500,6 +529,7 @@ module control_unit (
          bsel = b011; //bsel = 1
          wdsel = b1;
          alufn= b000000; //add
+          current_state = b100011;
          game_fsm.d = game_fsm.CHECK_POINTER;
         
         
@@ -512,14 +542,15 @@ module control_unit (
          asel = b000; //asel = ra_data
          bsel = b110; //bsel = 10
          wdsel = b1;
-         alufn = b110011;
+         alufn = b110011; //CMPEQ
+          current_state = b100100;
          game_fsm.d = game_fsm.BRANCH_CHECK_POINTER;
          
       //reading from previous state
       game_fsm.BRANCH_CHECK_POINTER:
          we_regfile = b1;
          regfile_read_address_a = b111; //read from temp storage
-        
+        current_state = b100101;
          if(ra_data[0] == 1){
            game_fsm.d = game_fsm.RESET_REGISTERS_R0;
           }
@@ -532,59 +563,68 @@ module control_unit (
          we_regfile = b1;
          regfile_write_address = b000;
          wdsel = 0;
+          current_state = b100110;
          game_fsm.d = game_fsm.RESET_REGISTERS_R1;
  
       game_fsm.RESET_REGISTERS_R1:
          we_regfile = b1;
          regfile_write_address = b001;
          wdsel = 0;
+          current_state = b100111;
          game_fsm.d = game_fsm.RESET_REGISTERS_R2;      
         
       game_fsm.RESET_REGISTERS_R2:
          we_regfile = b1;
          regfile_write_address = b010;
          wdsel = 0;
+          current_state = b101000;
          game_fsm.d = game_fsm.RESET_REGISTERS_R3; 
          
       game_fsm.RESET_REGISTERS_R3:
          we_regfile = b1;
          regfile_write_address = b011;
          wdsel = 0;
+          current_state = b101001;
          game_fsm.d = game_fsm.RESET_REGISTERS_R4;
 
        game_fsm.RESET_REGISTERS_R4:
          we_regfile = b1;
          regfile_write_address = b100;
          wdsel = 0;
+          current_state = b101010;
          game_fsm.d = game_fsm.RESET_REGISTERS_R5;
       
        game_fsm.RESET_REGISTERS_R5:
          we_regfile = b1;
          regfile_write_address = b101;
          wdsel = 0;
+          current_state = b101011;
          game_fsm.d = game_fsm.RESET_REGISTERS_R6;
        
        game_fsm.RESET_REGISTERS_R6:
          we_regfile = b1;
          regfile_write_address = b110;
          wdsel = 0;
+          current_state = b101110;
          game_fsm.d = game_fsm.RESET_REGISTERS_R7;
         
        game_fsm.RESET_REGISTERS_R7:
          we_regfile = b1;
          regfile_write_address = b111;
          wdsel = 0;
+          current_state = b101111;
          game_fsm.d = game_fsm.GAMEOVER;
         
       game_fsm.GAMEOVER:
          we_regfile = b0;
+          current_state = b110000;
          if (red_btn_input || green_btn_input || blue_btn_input){
           game_fsm.d = game_fsm.IDLE;
           }
         else{
           game_fsm.d = game_fsm.GAMEOVER;
           }
-                         
+       
       }
     }
     

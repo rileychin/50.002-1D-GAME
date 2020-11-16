@@ -34,12 +34,14 @@ module au_top (
     usb_tx = usb_rx;        // echo the serial data
     
     gameMachine.random_input = random.out;
+    //temporary add 0 red,green,blue input values
     gameMachine.red_btn_input = 0;
     gameMachine.green_btn_input = 0;
     gameMachine.blue_btn_input = 0;
     
     io_led[1][1:0] = random.out;
-    io_led[2][7:0] = gameMachine.debug_out[9:3];
-    io_led[1][7:5] = gameMachine.debug_out[2:0];
+    io_led[2][7:0] = gameMachine.debug_out[9:2];
+    io_led[1][7:6] = gameMachine.debug_out[1:0];
+    io_led[0] = gameMachine.debug_out_2;
   }
 }

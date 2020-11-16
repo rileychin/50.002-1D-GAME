@@ -8,7 +8,15 @@ module regfile (
     input rst, // reset
     output read_data_1[10], //read first register to do computation
     output read_data_2[10], //read second register to do computation
-    output pointer_out[10],
+    
+    //debug outputs, feed directly to au_top to check value
+    output pointer_out[10], //debug for checking pointer value
+    output row_red_out[10], //debug for checking red value
+    output row_green_out[10], //debug for checking green value
+    output row_blue_out[10], //debug for checking blue value
+    output rand_register_out[10],
+    
+    //
     output ra_out[10],
     output rb_out[10]
   ) {
@@ -84,8 +92,18 @@ module regfile (
         b111: read_data_2 = temp_var.q; out_b = temp_var.q;
         default: read_data_2 = 10b0;
         }
+    
+    
+    
     ra_out = out_a;
     rb_out = out_b;
+    
+    //debug
+    row_red_out = row_red.q;
+    row_green_out = row_green.q;
+    row_blue_out = row_blue.q;
     pointer_out = pointer.q;
+    rand_register_out = rand_register.q;
+    
   }
 }

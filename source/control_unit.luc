@@ -6,9 +6,9 @@ module control_unit (
     input blue_btn_input,
     input rb_data[10],
     input ra_data[10],
-    input pointer[5],
-    input difficulty[10],
-    input user_input[10],
+    //input pointer[5],
+    //input difficulty[10],
+    //input user_input[10],
     input slow_clock_in,
     
     
@@ -36,8 +36,7 @@ module control_unit (
   //Control Unit module specifies FSM states 
   //and control signals corresponding to states
   //main driver of game
-  counter slowclock(#SIZE(1),#DIV(27), .clk(clk), .rst(rst));
-  
+
   //INCLUDE FSM states here
   .clk(clk){
    fsm game_fsm = {IDLE, //1
@@ -498,7 +497,7 @@ module control_unit (
          asel = b000; //asel = ra_data
          bsel = b011; //bsel = 1
          wdsel = b1;
-         alufn= b000000;
+         alufn= b000000; //add
          game_fsm.d = game_fsm.CHECK_POINTER;
         
         

@@ -8,8 +8,12 @@ module regfile (
     input rst, // reset
     output read_data_1[10], //read first register to do computation
     output read_data_2[10], //read second register to do computation
-    output pointer_out[10]
+    output pointer_out[10],
+    output ra_out[10],
+    output rb_out[10]
   ) {
+  
+  sig out_a[10], out_b[10];
   
   //REGFILE contains all information to each register 
   //7 registers to store information, labeled with named instead of assigning a number
@@ -38,7 +42,8 @@ module regfile (
   
   //16 registers for registers 
   always {
-  
+    out_a = 0;
+    out_b = 0;
     //write back for write enable
     if (write_enable){
     //writing data back to registers
@@ -56,30 +61,31 @@ module regfile (
       
       
       case (read_address_1){
-        b000: read_data_1 = row_red.q;
-        b001: read_data_1 = row_green.q;
-        b010: read_data_1 = row_blue.q;
-        b011: read_data_1 = current_score.q;
-        b100: read_data_1 = pointer.q;
-        b101: read_data_1 = rand_register.q;
-        b110: read_data_1 = current_timer.q;
-        b111: read_data_1 = temp_var.q;
+        b000: read_data_1 = row_red.q; out_a = row_red.q;
+        b001: read_data_1 = row_green.q; out_a = row_green.q;
+        b010: read_data_1 = row_blue.q; out_a = row_blue.q;
+        b011: read_data_1 = current_score.q; out_a = current_score.q;
+        b100: read_data_1 = pointer.q; out_a = pointer.q;
+        b101: read_data_1 = rand_register.q; out_a = rand_register.q;
+        b110: read_data_1 = current_timer.q; out_a = current_timer.q;
+        b111: read_data_1 = temp_var.q; out_a = temp_var.q;
         default: read_data_1 = 10b0;
         }
       
       
       case(read_address_2){
-        b000: read_data_2 = row_red.q;
-        b001: read_data_2 = row_green.q;
-        b010: read_data_2 = row_blue.q;
-        b011: read_data_2 = current_score.q;
-        b100: read_data_2 = pointer.q;
-        b101: read_data_2 = rand_register.q;
-        b110: read_data_2 = current_timer.q;
-        b111: read_data_2 = temp_var.q;
+        b000: read_data_2 = row_red.q; out_b = row_red.q;
+        b001: read_data_2 = row_green.q; out_b = row_green.q;
+        b010: read_data_2 = row_blue.q; out_b = row_blue.q;
+        b011: read_data_2 = current_score.q; out_b = current_score.q;
+        b100: read_data_2 = pointer.q; out_b = pointer.q;
+        b101: read_data_2 = rand_register.q; out_b = rand_register.q;
+        b110: read_data_2 = current_timer.q; out_b = current_timer.q;
+        b111: read_data_2 = temp_var.q; out_b = temp_var.q;
         default: read_data_2 = 10b0;
         }
-    
+    ra_out = out_a;
+    rb_out = out_b;
     pointer_out = pointer.q;
   }
 }

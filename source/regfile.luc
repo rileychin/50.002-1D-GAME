@@ -9,12 +9,19 @@ module regfile (
     output read_data_1[10], //read first register to do computation
     output read_data_2[10], //read second register to do computation
     
+    
+    
     //debug outputs, feed directly to au_top to check value
+    //testing purpose, remove after finish
+    input score_in[1],
+    input score[10], //debug to add scores 
+    
     output pointer_out[10], //debug for checking pointer value
     output row_red_out[10], //debug for checking red value
     output row_green_out[10], //debug for checking green value
     output row_blue_out[10], //debug for checking blue value
     output rand_register_out[10],
+    output current_timer_out[10],
     
     //
     output ra_out[10],
@@ -52,6 +59,12 @@ module regfile (
   always {
     out_a = 0;
     out_b = 0;
+    
+    //testing purpose, remove after finish
+    if (score_in){
+      current_score.d = current_score.q + score;
+      }
+    
     //write back for write enable
     if (write_enable){
     //writing data back to registers
@@ -104,6 +117,7 @@ module regfile (
     row_blue_out = row_blue.q;
     pointer_out = pointer.q;
     rand_register_out = rand_register.q;
+    current_timer_out = current_timer.q;
     
   }
 }

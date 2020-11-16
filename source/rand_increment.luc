@@ -15,7 +15,7 @@ SEED = 128h843233523a613966423b622562592c62: SEED.WIDTH == 128 && SEED[95:0] != 
    dff seed[3]; //don't reset the seed because we don't want the same random number each time we press reset
     
   .rst(rst){
-     counter slowerclock(#SIZE(1), #DIV(27));
+     counter slowerclock(#SIZE(1), #DIV(23)); //random increment always runs at the fastest speed, so we dont get least repeat values as possible
      pn_gen random_number;
     }
  }

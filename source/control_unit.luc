@@ -10,6 +10,8 @@ module control_unit (
     //input difficulty[10],
     //input user_input[10],
     input slow_clock_in,   
+    input score_simulate,
+    
     
     output red_bits_generated[10],
     output green_bits_generated[10],
@@ -54,6 +56,7 @@ module control_unit (
       BRANCH_CHECK_SCORE_60, //14
       BRANCH_CHECK_SCORE_30, //15
       BRANCH_CHECK_SCORE_10, //16
+      BRANCH_CHECK_SCORE_0,
       BRANCH_DIFF_1,     //17
       SET_DIFF_3,        //18
       SET_DIFF_2,        //19
@@ -130,6 +133,13 @@ module control_unit (
     else if(slow_clock_in){
       game_fsm.d = game_fsm.SHIFT_R0_ONE;
       }
+     //TESTING INPUT FOR SCORE 
+     //testing purpose only, remove later
+    else if(score_simulate){
+      game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_60;    
+      }
+                    
+     
     //remain at idle
     else{
       game_fsm.d = game_fsm.IDLE;  
@@ -257,6 +267,7 @@ module control_unit (
         
       game_fsm.BRANCH_CHECK_SCORE_60:
          we_regfile = 1;
+         regfile_read_address_a = b111;
          regfile_read_address_b = b011;
          regfile_write_address = b111;
          asel = b101; //asel = 60
@@ -298,19 +309,32 @@ module control_unit (
           game_fsm.d =game_fsm.SET_DIFF_2;
           }
         else{
-          game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_10;
+          game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_0;
+          }
+          
+       //added new state to check for <10 score
+       game_fsm.BRANCH_CHECK_SCORE_0:
+         we_regfile = 1;
+         regfile_read_address_a = b111;
+         regfile_read_address_b = b011;
+         regfile_write_address = b111;
+         asel = b110; //asel = 0
+         bsel = b000; //bsel = rb_data
+         wdsel = 1;
+         alufn = b110111; //CMPLE
+          current_state = b001111;
+         if (ra_data[0] == 1 ){ //reading ra_data from previous result
+          game_fsm.d =game_fsm.SET_DIFF_1;
+          }
+        else{
+          game_fsm.d = game_fsm.BRANCH_DIFF_1;
           }
         
       game_fsm.BRANCH_DIFF_1:
          we_regfile = 0;
          regfile_read_address_a = b111;
-          current_state = b010000;
-         if (ra_data[0] == 1 ){ //reading ra_data from previous result
-          game_fsm.d =game_fsm.SET_DIFF_1;
-          }
-        else{
-          game_fsm.d = game_fsm.SET_DIFF_0;
-          }
+         current_state = b010000;
+         game_fsm.d = game_fsm.SET_DIFF_0;
        
        //setting difficulty for game 4 levels
        game_fsm.SET_DIFF_3:
@@ -399,12 +423,8 @@ module control_unit (
        //checking random = RED
        game_fsm.BRANCH_CHECK_RAND_0:
          we_regfile = b0;
-         regfile_read_address_a = b101;
-         regfile_write_address = b101;
+         regfile_read_address_a = b101; //choosing back RAND_REGISTER, dont need to write back since we checking direct from ra_data[x]
          asel = b000; //asel = ra_data
-         bsel = b010; //bsel  = 0
-         wdsel = b1;
-         alufn  = b110011; //CMPEQ
           current_state = b011001;
          game_fsm.d = game_fsm.BRANCH_CHECK_RAND_1;
         
@@ -412,11 +432,7 @@ module control_unit (
        game_fsm.BRANCH_CHECK_RAND_1:
          we_regfile = b0;
          regfile_read_address_a = b101;
-         regfile_write_address = b101;
          asel = b000; //asel = ra_data
-         bsel = b011; //bsel  = 1
-         wdsel = b1;
-         alufn  = b110011; //CMPEQ
           current_state = b011010;
          if (ra_data[2] == 1){
           game_fsm.d = game_fsm.ADD_ONE_RED;
@@ -429,11 +445,7 @@ module control_unit (
       game_fsm.BRANCH_CHECK_RAND_2:
          we_regfile = b0;
          regfile_read_address_a = b101;
-         regfile_write_address = b101;
          asel = b000; //asel = ra_data
-         bsel = b100; //bsel  = 2
-         wdsel = b1;
-         alufn  = b110011; //CMPEQ
           current_state = b011011;
          if (ra_data[3] == 1){
           game_fsm.d = game_fsm.ADD_ONE_GREEN;

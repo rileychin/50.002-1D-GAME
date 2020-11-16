@@ -6,6 +6,12 @@ module game_beta (
     input blue_btn_input,
     input random_input[2],
     
+    input score_10,
+    input score_30,
+    input score_60,
+    
+    //debug 
+    //input button_in,
     output debug_out[10],
     output debug_out_2[10]
     //output timer_out[10]
@@ -27,7 +33,10 @@ module game_beta (
       control_unit game_controlunit;
       regfile players;
       //add a slow clock timer to add 
-      counter slow_timer(#SIZE(1),#DIV(26));
+      counter slow_timer_0(#SIZE(1),#DIV(26)); //1 block/s
+      counter slow_timer_1(#SIZE(1),#DIV(25)); //2 block/s
+      counter slow_timer_2(#SIZE(1),#DIV(24)); //4 block/s
+      counter slow_timer_3(#SIZE(1),#DIV(23)); //8 block/s
       }
     }
 
@@ -35,11 +44,33 @@ module game_beta (
     inputAlu_a = 0;
     inputAlu_b = 0;
     rand_tenbits = 0;
+    players.score = 0;
+    players.score_in = b0;
+    game_controlunit.score_simulate = b0;
+    
+    //testing purpose, remove after finish
+    if(score_10){
+      players.score = b0000001010;
+      players.score_in = b1;
+      game_controlunit.score_simulate = b1;
+      }
+    else if(score_30){
+      players.score = b0000011110;
+      players.score_in = b1;
+      game_controlunit.score_simulate = b1;
+      }
+    else if (score_60){
+      players.score = b0000111100;
+      players.score_in = b1;
+      game_controlunit.score_simulate = b1;
+      }
+    
+    
     
     //increase slow_clock each time
-    clock_detector.in = slow_timer.value;
+    clock_detector.in = 0;
     //game_controlunit.slow_clock_in = slow_timer.value;
-    game_controlunit.slow_clock_in = clock_detector.out;
+    game_controlunit.slow_clock_in = 0;
     
     //initialize WE for regfile
     players.write_enable = game_controlunit.we_regfile;
@@ -83,6 +114,25 @@ module game_beta (
       rand_tenbits = b0000000011; //write back direct ALL
       }
     
+    //setting difficulty(speed) based on current_timer register
+    //maybe can modularize difficulty 
+    if(players.current_timer_out[1:0] == b00){ //DIFFICULTY = 0
+        clock_detector.in = slow_timer_0.value;
+        game_controlunit.slow_clock_in = clock_detector.out;
+      }
+    else if(players.current_timer_out[1:0] == b01){ //DIFFICULTY = 1
+        clock_detector.in = slow_timer_1.value;
+        game_controlunit.slow_clock_in = clock_detector.out;
+      }
+    else if (players.current_timer_out[1:0] == b10){ //DIFFICULTY = 2
+        clock_detector.in = slow_timer_2.value;
+        game_controlunit.slow_clock_in = clock_detector.out;
+      }
+    else {                                           //DIFFICULTY = 3
+        clock_detector.in = slow_timer_3.value;
+        game_controlunit.slow_clock_in = clock_detector.out;
+      }
+    
     case(game_controlunit.asel){
         b000: inputAlu_a = players.read_data_1; //reading Ra input
         b001: inputAlu_a = b1; //user input always 1, is just selecting which register(R0,R1,R2) to compare to 
@@ -90,6 +140,7 @@ module game_beta (
         b011: inputAlu_a = b0000001010; //10 in binary 10 bits
         b100: inputAlu_a = b0000011110; //30 in binary 10 bits
         b101: inputAlu_a = b0000111100; //60 in binary 10 bits
+        b110: inputAlu_a = b0000000000; //0 in binary 10 bits
       }
     
     case(game_controlunit.bsel){
@@ -115,15 +166,16 @@ module game_beta (
       }
       
     //for debug purposes
-    debug_out = game_controlunit.current_state; //debug for checking CURRENT STATE
+    debug_out = players.current_timer_out; //debug for checking CURRENT STATE
     
     //debug_out_2 = players.pointer_out; //debug for checking pointer value
     //debug_out_2 = players.rand_register_out; 
     debug_out_2 = players.row_red_out; //debug for checking red row
-    
+
     //things that work
-    //1. pointer increase to 10 then game over
-    //2. shifting works based on random_register
+    //1. pointer increase to 10 then game over 
+    //2. shifting R0,R1,R2 content and adding based on generated bits
     //3. updating random register from generated random bits
+    //4. (not working) currently testing score & difficulty relationship 
   }
 }

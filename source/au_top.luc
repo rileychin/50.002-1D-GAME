@@ -19,6 +19,8 @@ module au_top (
     // clock. This ensures the entire FPGA comes out of reset at the same time.
     reset_conditioner reset_cond;
     rand_increment random(.rst(rst));
+    button_conditioner buttoncond[4];
+    edge_detector buttondetector[4](#RISE(1), #FALL(0));
   }
   
   always {
@@ -38,6 +40,20 @@ module au_top (
     gameMachine.red_btn_input = 0;
     gameMachine.green_btn_input = 0;
     gameMachine.blue_btn_input = 0;
+    
+    //simulating scores for and respective speeds
+    //testing purpose, remove after finish
+    buttoncond.in[0] = io_button[0];
+    buttondetector.in[0] = buttoncond.out[0];
+    gameMachine.score_10 = buttondetector.out[0];
+    
+    buttoncond.in[1] = io_button[1];
+    buttondetector.in[1] = buttoncond.out[1];
+    gameMachine.score_30 = buttondetector.out[1];
+    
+    buttoncond.in[2] = io_button[2];
+    buttondetector.in[2] = buttoncond.out[2];
+    gameMachine.score_60 = buttondetector.out[2];
     
     io_led[1][1:0] = random.out;
     io_led[2][7:0] = gameMachine.debug_out[9:2];

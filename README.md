@@ -8,3 +8,4 @@
     //4. score & difficulty relationship (hard coded several score inputs)
     //5. (now testing) red,green,blue button input corresponding to pointer 
   
+check game_beta.luc for more information

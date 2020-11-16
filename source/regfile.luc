@@ -39,7 +39,7 @@ module regfile (
       dff row_blue[10]; //third column depicting blue
       dff current_score[10]; //register for score check
       dff pointer[10]; //register for pointer(only need to use 3 bits),10 bits for convenience
-      dff rand_register[10];
+      dff rand_register[10]; // register to store random generated number from 0-3
       dff temp_var[10]; //temporary storage register
       dff current_timer[10]; //timer for game counter
       

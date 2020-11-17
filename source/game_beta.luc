@@ -25,6 +25,11 @@ module game_beta (
   sig current_pointer[10];
   sig rand_tenbits[10];
   
+  sig pointer_decimal_value;
+  sig overwrite_data[10];
+  
+  sig user_input[10];
+  
   //setup slow clock as input,one difficulty for now
   
   .clk(clk){
@@ -48,6 +53,11 @@ module game_beta (
     players.score = 0;
     players.score_in = b0;
     game_controlunit.score_simulate = b0;
+    players.overwrite_enable = b0;
+    players.overwrite_address = 0;
+    pointer_decimal_value = 0;
+    overwrite_data = 0;
+    user_input = 0;
     
     //testing purpose, remove after finish
     if(score_10){
@@ -65,7 +75,6 @@ module game_beta (
       players.score_in = b1;
       game_controlunit.score_simulate = b1;
       }
-    
     
     
     //increase slow_clock each time
@@ -92,15 +101,34 @@ module game_beta (
     
     //red_btn_input
     game_controlunit.red_btn_input = red_btn_input;
+    if(red_btn_input){
+      user_input = players.row_red_out;
+      }
     
     //green_btn_input
     game_controlunit.green_btn_input = green_btn_input;
+    if(green_btn_input){
+      user_input = players.row_green_out;
+      }
     
     //blue_btn_input
     game_controlunit.blue_btn_input = blue_btn_input;
+    if(blue_btn_input){
+      user_input = players.row_blue_out;
+      }
     
     //current pointer
     current_pointer = players.pointer_out;
+    
+    //section here is to MANUALLY OVERRIDE R0,R1,R2 registers //TESTING ONLY, does not work yet 
+   
+    //enable override for regfile 
+    if(game_controlunit.minus_msb){
+      players.overwrite_enable = b1; //enable overwrite of color
+      //players.overwrite_address = game_controlunit.regfile_read_address_b; //overwrite address (R0,R1,R2)
+      players.overwrite_address = b000;
+      overwrite_data = players.rb_out; //registers read from address b 
+      }
     
     
     //random input converted into 10 bits, have to put this into a ROM 
@@ -175,13 +203,14 @@ module game_beta (
     //debug_out_2 = players.rand_register_out; 
     debug_out_2 = players.row_red_out; //debug for checking red row
     
-    debug_out_3 = players.pointer_out;
-    //things that work
+    debug_out_3 = players.pointer_out; 
+    
+    //things that work & dont work (this is a comment in game_beta.luc)
     //1. pointer increase to 10 then game over 
     //2. shifting R0,R1,R2 content and adding based on generated bits
     //3. updating random register from generated random bits
     //4. score & difficulty relationship (hard coded several score inputs)
-    //5. (now testing) red,green,blue button input corresponding to pointer (trying with red now first )
+    //5. (now testing) red,green,blue button input corresponding to pointer (trying with red now first)
     //5.1 correct button input reduces pointer, BUT DOESNT REMOVE Rx bits. (edit in regfile)
   }
 }

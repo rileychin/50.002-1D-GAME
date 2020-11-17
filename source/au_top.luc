@@ -8,7 +8,10 @@ module au_top (
     output io_seg [8],      // 7-segment LEDs on IO Shield
     output io_sel [4],      // Digit select on IO Shield
     input io_button [5],    // 5 buttons on IO Shield
-    input io_dip [3][8]     // DIP switches on IO Shield
+    input io_dip [3][8],    // DIP switches on IO Shield
+    input red[1],
+    input green[1],
+    input blue[1]
   ) {
   
   sig rst;                  // reset signal
@@ -19,8 +22,8 @@ module au_top (
     // clock. This ensures the entire FPGA comes out of reset at the same time.
     reset_conditioner reset_cond;
     rand_increment random(.rst(rst));
-    button_conditioner buttoncond[4];
-    edge_detector buttondetector[4](#RISE(1), #FALL(0));
+    button_conditioner buttoncond[6];
+    edge_detector buttondetector[6](#RISE(1), #FALL(0));
   }
   
   always {
@@ -37,9 +40,9 @@ module au_top (
     
     gameMachine.random_input = random.out;
     //temporary add 0 red,green,blue input values
-    //gameMachine.red_btn_input = 0;
-    gameMachine.green_btn_input = 0;
-    gameMachine.blue_btn_input = 0;
+    //gameMachine.red_btn_input = red;
+    gameMachine.green_btn_input = green;
+    gameMachine.blue_btn_input = blue;
     
     //simulating scores for and respective speeds
     //testing purpose, remove after finish
@@ -55,9 +58,22 @@ module au_top (
     buttondetector.in[2] = buttoncond.out[2];
     gameMachine.score_60 = buttondetector.out[2];
     
-    buttoncond.in[3] = io_button[3];
+    buttoncond.in[3] = red; //red input
     buttondetector.in[3] = buttoncond.out[3];
-    gameMachine.red_btn_input = buttondetector.out[3]; //temporary test button for game 
+    gameMachine.red_btn_input = buttondetector.out[3];
+    
+    buttoncond.in[4] = green; //green input
+    buttondetector.in[4] = buttoncond.out[4];
+    gameMachine.green_btn_input = buttondetector.out[4];
+    
+    //buttoncond.in[5] = blue;
+    buttoncond.in[5] = blue; //blue input
+    buttondetector.in[5] = buttoncond.out[5];
+    gameMachine.blue_btn_input = buttondetector.out[5];
+    
+    //buttoncond.in[3] = io_button[3];
+    //buttondetector.in[3] = buttoncond.out[3];
+    //gameMachine.red_btn_input = buttondetector.out[3]; //temporary test button for game 
     
     io_led[1][1:0] = random.out;
     io_led[2][7:0] = gameMachine.debug_out_3[9:2];

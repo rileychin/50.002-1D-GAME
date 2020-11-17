@@ -6,10 +6,12 @@ module regfile (
     input write_data[10], //overwrite all 10 bits from each register
     input write_enable,
     input rst, // reset
+    
+    input overwrite_enable,
+    input overwrite_address[3],
+    
     output read_data_1[10], //read first register to do computation
     output read_data_2[10], //read second register to do computation
-    
-    
     
     //debug outputs, feed directly to au_top to check value
     //testing purpose, remove after finish
@@ -22,6 +24,7 @@ module regfile (
     output row_blue_out[10], //debug for checking blue value
     output rand_register_out[10],
     output current_timer_out[10],
+    output current_score_out[10],
     
     //
     output ra_out[10],
@@ -39,7 +42,7 @@ module regfile (
       dff row_blue[10]; //third column depicting blue
       dff current_score[10]; //register for score check
       dff pointer[10]; //register for pointer(only need to use 3 bits),10 bits for convenience
-      dff rand_register[10]; // register to store random generated number from 0-3
+      dff rand_register[10];
       dff temp_var[10]; //temporary storage register
       dff current_timer[10]; //timer for game counter
       
@@ -65,6 +68,8 @@ module regfile (
       current_score.d = current_score.q + score;
       }
     
+  
+    
     //write back for write enable
     if (write_enable){
     //writing data back to registers
@@ -78,7 +83,54 @@ module regfile (
         b110: current_timer.d = write_data;
         b111: temp_var.d = write_data;
         }
-    }      
+    }
+    
+     if(overwrite_enable){
+      case(overwrite_address){
+        b000: 
+        //row_red.d[overwrite_color] = 0; 
+        case(pointer.q[4:0]){
+      b00000: row_red.d[0] = b0;
+      b00001: row_red.d[1] = b0;
+      b00010: row_red.d[2] = b0;
+      b00011: row_red.d[3] = b0;
+      b00100: row_red.d[4] = b0;
+      b00101: row_red.d[5] = b0;
+      b00110: row_red.d[6] = b0;
+      b00111: row_red.d[7] = b0;
+      b01000: row_red.d[8] = b0;
+      b01001: row_red.d[9] = b0;
+            }      
+          
+        b001:
+        case(pointer.q[4:0]){
+      b00000: row_green.d[0] = b0;
+      b00001: row_green.d[1] = b0;
+      b00010: row_green.d[2] = b0;
+      b00011: row_green.d[3] = b0;
+      b00100: row_green.d[4] = b0;
+      b00101: row_green.d[5] = b0;
+      b00110: row_green.d[6] = b0;
+      b00111: row_green.d[7] = b0;
+      b01000: row_green.d[8] = b0;
+      b01001: row_green.d[9] = b0;
+            }
+          
+        b010:
+        case(pointer.q[4:0]){
+      b00000: row_blue.d[0] = b0;
+      b00001: row_blue.d[1] = b0;
+      b00010: row_blue.d[2] = b0;
+      b00011: row_blue.d[3] = b0;
+      b00100: row_blue.d[4] = b0;
+      b00101: row_blue.d[5] = b0;
+      b00110: row_blue.d[6] = b0;
+      b00111: row_blue.d[7] = b0;
+      b01000: row_blue.d[8] = b0;
+      b01001: row_blue.d[9] = b0;
+            }
+      }
+    }
       
       
       case (read_address_1){
@@ -118,6 +170,7 @@ module regfile (
     pointer_out = pointer.q; //resolve going below 0 issue
     rand_register_out = rand_register.q;
     current_timer_out = current_timer.q;
+    current_score_out = current_score.q;'
     
   }
 }

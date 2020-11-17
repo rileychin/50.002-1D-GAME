@@ -30,16 +30,19 @@ module control_unit (
     output regfile_read_address_a[3],
     output regfile_read_address_b[3],
     output we_regfile,
-    output wdsel
+    output wdsel,
+    output minus_msb // new control signal to BETA to decrease most significant bit 
     
     
   ) {
 
+  //sig pointer_decimal_value; //declare pointer value as a decimal, use case
   
   //Control Unit module specifies FSM states 
   //and control signals corresponding to states
   //main driver of game
 
+  sig pointer_decimal_value;
   //INCLUDE FSM states here
   .clk(clk){
    fsm game_fsm = {IDLE, //1
@@ -52,6 +55,9 @@ module control_unit (
       REMOVE_R0_DATA,    //9
       REMOVE_R1_DATA,    //10
       REMOVE_R2_DATA,    //11
+      REMOVE_R0_DATA_CONFIRM,
+      REMOVE_R1_DATA_CONFIRM,    
+      REMOVE_R2_DATA_CONFIRM,
       SUB_POINTER,       //12
       ADD_SCORE,         //13
       BRANCH_CHECK_SCORE_60, //14
@@ -89,10 +95,13 @@ module control_unit (
       RESET_REGISTERS_R6,
       RESET_REGISTERS_R7,  //35
       GAMEOVER};         //36
-    
     }
   
   always {
+  
+    
+    
+  
     alufn = 0;
     asel = 0;
     bsel = 0;
@@ -107,6 +116,25 @@ module control_unit (
     user_output = 0;
     wdsel = 1;
     current_state = 0;
+    minus_msb = 0; //dont minus msb of 
+    
+    
+    
+    //changing pointer value from 10 bits BINARY to DECIMAL value
+    case(pointer_value[3:0]){
+      b00000: pointer_decimal_value = 0;
+      b00001: pointer_decimal_value = 1;
+      b00010: pointer_decimal_value = 2;
+      b00011: pointer_decimal_value = 3;
+      b00100: pointer_decimal_value = 4;
+      b00101: pointer_decimal_value = 5;
+      b00110: pointer_decimal_value = 6;
+      b00111: pointer_decimal_value = 7;
+      b01000: pointer_decimal_value = 8;
+      b01001: pointer_decimal_value = 9;
+      b01010: pointer_decimal_value = 10;
+      default: pointer_decimal_value = 0;
+      }
     
     //check if reset button is pressed, reset all registers
     if(rst) {
@@ -139,8 +167,6 @@ module control_unit (
     else if(score_simulate){
       game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_60;    
       }
-                    
-     
     //remain at idle
     else{
       game_fsm.d = game_fsm.IDLE;  
@@ -169,7 +195,7 @@ module control_unit (
          current_state = b000011;
          game_fsm.d = game_fsm.BRANCH_GREEN;
         
-      game_fsm.CHECK_GREEN:
+      game_fsm.CHECK_BLUE:
          we_regfile = 1;
          regfile_read_address_b = b010; //read R2
          regfile_write_address = b111; //write R7
@@ -181,68 +207,112 @@ module control_unit (
          game_fsm.d = game_fsm.BRANCH_BLUE;
         
        
-      //branch and check for R7 content 
+      //branch and check for Rb content 
       game_fsm.BRANCH_RED:
          we_regfile = 0;
-         regfile_read_address_b = b111;
+         regfile_read_address_b = b000;
          current_state = b000101;
-         if (rb_data[0] == 1){ //read directly REGFILE rb_data
-           game_fsm.d = game_fsm.REMOVE_R0_DATA;
-          }
-         else{
-           game_fsm.d = game_fsm.SHIFT_R0_ONE;
-          }
+          
+              case(pointer_value[3:0]){
+      b00000: pointer_decimal_value = 0;if (rb_data[0] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00001: pointer_decimal_value = 1;if (rb_data[1] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00010: pointer_decimal_value = 2;if (rb_data[2] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00011: pointer_decimal_value = 3;if (rb_data[3] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00100: pointer_decimal_value = 4;if (rb_data[4] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00101: pointer_decimal_value = 5;if (rb_data[5] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00110: pointer_decimal_value = 6;if (rb_data[6] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00111: pointer_decimal_value = 7;if (rb_data[7] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b01000: pointer_decimal_value = 8;if (rb_data[8] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b01001: pointer_decimal_value = 9;if (rb_data[9] == b1) { game_fsm.d = game_fsm.REMOVE_R0_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      }
         
       game_fsm.BRANCH_GREEN:
          we_regfile = 0;
-         regfile_read_address_b = b111;
+         regfile_read_address_b = b001;
          current_state = b000110;
-         if (rb_data[0] == 1){ //read directly REGFILE rb_data
-           game_fsm.d = game_fsm.REMOVE_R1_DATA;
-          }
-         else{
-           game_fsm.d = game_fsm.SHIFT_R0_ONE;
-          }
+              case(pointer_value[3:0]){
+      b00000: pointer_decimal_value = 0;if (rb_data[0] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00001: pointer_decimal_value = 1;if (rb_data[1] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00010: pointer_decimal_value = 2;if (rb_data[2] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00011: pointer_decimal_value = 3;if (rb_data[3] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00100: pointer_decimal_value = 4;if (rb_data[4] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00101: pointer_decimal_value = 5;if (rb_data[5] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00110: pointer_decimal_value = 6;if (rb_data[6] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00111: pointer_decimal_value = 7;if (rb_data[7] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b01000: pointer_decimal_value = 8;if (rb_data[8] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b01001: pointer_decimal_value = 9;if (rb_data[9] == b1) { game_fsm.d = game_fsm.REMOVE_R1_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      }
         
        game_fsm.BRANCH_BLUE:
          we_regfile = 0;
-         regfile_read_address_b = b111;
+         regfile_read_address_b = b010;
          current_state = b000111;
-         if (rb_data[0] == 1){ //read directly REGFILE rb_data
-           game_fsm.d = game_fsm.REMOVE_R2_DATA;
-          }
-         else{
-           game_fsm.d = game_fsm.SHIFT_R0_ONE;
-          }
+              case(pointer_value[3:0]){
+      b00000: pointer_decimal_value = 0;if (rb_data[0] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00001: pointer_decimal_value = 1;if (rb_data[1] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00010: pointer_decimal_value = 2;if (rb_data[2] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00011: pointer_decimal_value = 3;if (rb_data[3] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00100: pointer_decimal_value = 4;if (rb_data[4] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00101: pointer_decimal_value = 5;if (rb_data[5] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00110: pointer_decimal_value = 6;if (rb_data[6] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b00111: pointer_decimal_value = 7;if (rb_data[7] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b01000: pointer_decimal_value = 8;if (rb_data[8] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      b01001: pointer_decimal_value = 9;if (rb_data[9] == b1) { game_fsm.d = game_fsm.REMOVE_R2_DATA;}else{ game_fsm.d = game_fsm.SHIFT_R0_ONE;}
+      }
         
        //remove directly from FSM and update REGFILE direct
        //UNFINISHED havent removed the data from respective register
        game_fsm.REMOVE_R0_DATA:
-          we_regfile = 1;
-          regfile_read_address_a = b000;
+          we_regfile = 0; //actually dont have to override whatever register we have 
+          regfile_read_address_a = b000; //select red R0
           regfile_write_address = b000;
-          bsel = b010;
+          asel = b000; //asel = ra_data
+          bsel = b010; //doesnt matter
+          minus_msb = 1; //remove data in game_beta
+          alufn = b011010; //'A'
           current_state = b001000;
           game_fsm.d = game_fsm.SUB_POINTER;
           
       game_fsm.REMOVE_R1_DATA:
-          we_regfile = 1;
-          regfile_read_address_a = b001;
+          we_regfile = 0;
+          regfile_read_address_a = b001;//select green R1
           regfile_write_address = b001;
-          bsel = b010;
+          asel = b000;//asel = ra_data
+          bsel = b010;//doesnt matter
+          minus_msb = 1; //remove data in game_beta //control_unit -> game_beta -> regfile
+          alufn = b011010;//'A'
           current_state = b001001;
           game_fsm.d = game_fsm.SUB_POINTER;
         
       game_fsm.REMOVE_R2_DATA:
-          we_regfile = 1;
-          regfile_read_address_a = b000;
-          regfile_write_address = b000;
-          bsel = b010;
+          we_regfile = 0;
+          regfile_read_address_a = b010; //select blue R2
+          regfile_write_address = b010; 
+          asel = b000; //asel = ra_data
+          bsel = b010; //doesnt matter
+          minus_msb = 1; //remove data in game_beta
+          alufn = b011010; //'A'
           current_state = b001010;
           game_fsm.d = game_fsm.SUB_POINTER;
         
+      //move to another state so can read Rx data properly     
+      /*game_fsm.REMOVE_R0_DATA_CONFIRM:
+          regfile_read_address_a = b000;
+          minus_msb = 1;
+          game_fsm.d = game_fsm.SUB_POINTER;
+      
+      game_fsm.REMOVE_R1_DATA_CONFIRM:
+          regfile_read_address_a = b001;
+          minus_msb = 1;
+          game_fsm.d = game_fsm.SUB_POINTER;
+          
+      game_fsm.REMOVE_R2_DATA_CONFIRM:
+          regfile_read_address_a = b010;
+          minus_msb = 1;
+          game_fsm.d = game_fsm.SUB_POINTER;*/
         
       game_fsm.SUB_POINTER:
+        minus_msb = 0;
         if(pointer_value == b0000000000){ //if pointer is at 0, no need to SUB again
           game_fsm.d = game_fsm.ADD_SCORE;
             }

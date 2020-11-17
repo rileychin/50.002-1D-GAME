@@ -7,9 +7,6 @@ module regfile (
     input write_enable,
     input rst, // reset
     
-    input overwrite_enable,
-    input overwrite_address[3],
-    
     output read_data_1[10], //read first register to do computation
     output read_data_2[10], //read second register to do computation
     
@@ -84,54 +81,6 @@ module regfile (
         b111: temp_var.d = write_data;
         }
     }
-    
-     if(overwrite_enable){
-      case(overwrite_address){
-        b000: 
-        //row_red.d[overwrite_color] = 0; 
-        case(pointer.q[4:0]){
-      b00000: row_red.d[0] = b0;
-      b00001: row_red.d[1] = b0;
-      b00010: row_red.d[2] = b0;
-      b00011: row_red.d[3] = b0;
-      b00100: row_red.d[4] = b0;
-      b00101: row_red.d[5] = b0;
-      b00110: row_red.d[6] = b0;
-      b00111: row_red.d[7] = b0;
-      b01000: row_red.d[8] = b0;
-      b01001: row_red.d[9] = b0;
-            }      
-          
-        b001:
-        case(pointer.q[4:0]){
-      b00000: row_green.d[0] = b0;
-      b00001: row_green.d[1] = b0;
-      b00010: row_green.d[2] = b0;
-      b00011: row_green.d[3] = b0;
-      b00100: row_green.d[4] = b0;
-      b00101: row_green.d[5] = b0;
-      b00110: row_green.d[6] = b0;
-      b00111: row_green.d[7] = b0;
-      b01000: row_green.d[8] = b0;
-      b01001: row_green.d[9] = b0;
-            }
-          
-        b010:
-        case(pointer.q[4:0]){
-      b00000: row_blue.d[0] = b0;
-      b00001: row_blue.d[1] = b0;
-      b00010: row_blue.d[2] = b0;
-      b00011: row_blue.d[3] = b0;
-      b00100: row_blue.d[4] = b0;
-      b00101: row_blue.d[5] = b0;
-      b00110: row_blue.d[6] = b0;
-      b00111: row_blue.d[7] = b0;
-      b01000: row_blue.d[8] = b0;
-      b01001: row_blue.d[9] = b0;
-            }
-      }
-    }
-      
       
       case (read_address_1){
         b000: read_data_1 = row_red.q; out_a = row_red.q;

@@ -30,6 +30,8 @@ module game_beta (
   
   sig user_input[10];
   
+  sig bitmask[10];
+  
   //setup slow clock as input,one difficulty for now
   
   .clk(clk){
@@ -53,11 +55,9 @@ module game_beta (
     players.score = 0;
     players.score_in = b0;
     game_controlunit.score_simulate = b0;
-    players.overwrite_enable = b0;
-    players.overwrite_address = 0;
-    pointer_decimal_value = 0;
     overwrite_data = 0;
     user_input = 0;
+    bitmask = 0;
     
     //testing purpose, remove after finish
     if(score_10){
@@ -121,15 +121,19 @@ module game_beta (
     current_pointer = players.pointer_out;
     
     //section here is to MANUALLY OVERRIDE R0,R1,R2 registers //TESTING ONLY, does not work yet 
-   
-    //enable override for regfile 
-    if(game_controlunit.minus_msb){
-      players.overwrite_enable = b1; //enable overwrite of color
-      //players.overwrite_address = game_controlunit.regfile_read_address_b; //overwrite address (R0,R1,R2)
-      players.overwrite_address = b000;
-      overwrite_data = players.rb_out; //registers read from address b 
+       //power move here  bitmask used to GET RID OF MSB, user_input is to CHECK msb
+      case(players.pointer_out[3:0]){
+      b0000: bitmask = 0000000000; user_input = b0000000000; //user_input <= register 
+      b0001: bitmask = 0000000000; user_input = b0000000001; 
+      b0010: bitmask = 0000000001; user_input = b0000000010;
+      b0011: bitmask = 0000000011; user_input = b0000000100;
+      b0100: bitmask = 0000000111; user_input = b0000001000;
+      b0101: bitmask = 0000001111; user_input = b0000010000;
+      b0110: bitmask = 0000011111; user_input = b0000100000;
+      b0111: bitmask = 0000111111; user_input = b0001000000;
+      b1000: bitmask = 0001111111; user_input = b0010000000;
+      b1001: bitmask = 0011111111; user_input = b0100000000;
       }
-    
     
     //random input converted into 10 bits, have to put this into a ROM 
     if(random_input == b00){
@@ -166,7 +170,7 @@ module game_beta (
     
     case(game_controlunit.asel){
         b000: inputAlu_a = players.read_data_1; //reading Ra input
-        b001: inputAlu_a = b1; //user input always 1, is just selecting which register(R0,R1,R2) to compare to 
+        b001: inputAlu_a = user_input; //user input depends on pointer value
         b010: inputAlu_a = b0000000001; //1 in binary 10 bits
         b011: inputAlu_a = b0000001010; //10 in binary 10 bits
         b100: inputAlu_a = b0000011110; //30 in binary 10 bits
@@ -182,6 +186,7 @@ module game_beta (
       b100: inputAlu_b = b0000000010; //2 in binary 10 bits
       b101: inputAlu_b = b0000000011; //3 in binary 10 bits
       b110: inputAlu_b = b0000001010; //10 in binary 10 bits
+      b111: inputAlu_b = bitmask; //BITMASK for binary, used in removing of msb
       }
     
     //ALU check
@@ -197,13 +202,14 @@ module game_beta (
       }
       
     //for debug purposes
-    debug_out = players.current_timer_out; //debug for checking 
+    debug_out = user_input; //debug for checking 
     
     //debug_out_2 = players.pointer_out; //debug for checking pointer value
     //debug_out_2 = players.rand_register_out; 
+    //debug_out_2 = players.row_red_out;
     debug_out_2 = players.row_red_out; //debug for checking red row
     
-    debug_out_3 = players.pointer_out; 
+    debug_out_3 = bitmask; 
     
     //things that work & dont work (this is a comment in game_beta.luc)
     //1. pointer increase to 10 then game over 

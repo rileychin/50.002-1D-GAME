@@ -9,9 +9,9 @@ module au_top (
     output io_sel [4],      // Digit select on IO Shield
     input io_button [5],    // 5 buttons on IO Shield
     input io_dip [3][8],    // DIP switches on IO Shield
-    input red[1],
-    input green[1],
-    input blue[1]
+    input red,
+    input green,
+    input blue
   ) {
   
   sig rst;                  // reset signal
@@ -75,10 +75,8 @@ module au_top (
     //buttondetector.in[3] = buttoncond.out[3];
     //gameMachine.red_btn_input = buttondetector.out[3]; //temporary test button for game 
     
-    io_led[1][1:0] = random.out;
-    io_led[2][7:0] = gameMachine.debug_out_3[9:2];
-    io_led[1][7:6] = gameMachine.debug_out_3[1:0];
-    io_led[1][3:2] = gameMachine.debug_out[1:0];
-    io_led[0] = gameMachine.debug_out_2;
+    io_led[0] = gameMachine.debug_out;
+    io_led[1] = gameMachine.debug_out_2;
+    io_led[2] = gameMachine.debug_out_3;
   }
 }

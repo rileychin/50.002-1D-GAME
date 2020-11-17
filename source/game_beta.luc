@@ -25,12 +25,11 @@ module game_beta (
   sig current_pointer[10];
   sig rand_tenbits[10];
   
-  sig pointer_decimal_value;
   sig overwrite_data[10];
   
   sig user_input[10];
   
-  sig bitmask[10];
+  sig bitemask[10];
   
   //setup slow clock as input,one difficulty for now
   
@@ -57,7 +56,7 @@ module game_beta (
     game_controlunit.score_simulate = b0;
     overwrite_data = 0;
     user_input = 0;
-    bitmask = 0;
+    bitemask = 0;
     
     //testing purpose, remove after finish
     if(score_10){
@@ -101,38 +100,31 @@ module game_beta (
     
     //red_btn_input
     game_controlunit.red_btn_input = red_btn_input;
-    if(red_btn_input){
-      user_input = players.row_red_out;
-      }
     
     //green_btn_input
     game_controlunit.green_btn_input = green_btn_input;
-    if(green_btn_input){
-      user_input = players.row_green_out;
-      }
     
     //blue_btn_input
     game_controlunit.blue_btn_input = blue_btn_input;
-    if(blue_btn_input){
-      user_input = players.row_blue_out;
-      }
     
     //current pointer
     current_pointer = players.pointer_out;
     
     //section here is to MANUALLY OVERRIDE R0,R1,R2 registers //TESTING ONLY, does not work yet 
        //power move here  bitmask used to GET RID OF MSB, user_input is to CHECK msb
+    
       case(players.pointer_out[3:0]){
-      b0000: bitmask = 0000000000; user_input = b0000000000; //user_input <= register 
-      b0001: bitmask = 0000000000; user_input = b0000000001; 
-      b0010: bitmask = 0000000001; user_input = b0000000010;
-      b0011: bitmask = 0000000011; user_input = b0000000100;
-      b0100: bitmask = 0000000111; user_input = b0000001000;
-      b0101: bitmask = 0000001111; user_input = b0000010000;
-      b0110: bitmask = 0000011111; user_input = b0000100000;
-      b0111: bitmask = 0000111111; user_input = b0001000000;
-      b1000: bitmask = 0001111111; user_input = b0010000000;
-      b1001: bitmask = 0011111111; user_input = b0100000000;
+      b0000: bitemask = b0000000000; user_input = b0000000000; //user_input <= register 
+      b0001: bitemask = b0000000000; user_input = b0000000001; 
+      b0010: bitemask = b0000000001; user_input = b0000000010;
+      b0011: bitemask = b0000000011; user_input = b0000000100;
+      b0100: bitemask = b0000000111; user_input = b0000001000;
+      b0101: bitemask = b0000001111; user_input = b0000010000;
+      b0110: bitemask = b0000011111; user_input = b0000100000;
+      b0111: bitemask = b0000111111; user_input = b0001000000;
+      b1000: bitemask = b0001111111; user_input = b0010000000;
+      b1001: bitemask = b0011111111; user_input = b0100000000;
+      default: bitemask = b0000000000;
       }
     
     //random input converted into 10 bits, have to put this into a ROM 
@@ -186,7 +178,7 @@ module game_beta (
       b100: inputAlu_b = b0000000010; //2 in binary 10 bits
       b101: inputAlu_b = b0000000011; //3 in binary 10 bits
       b110: inputAlu_b = b0000001010; //10 in binary 10 bits
-      b111: inputAlu_b = bitmask; //BITMASK for binary, used in removing of msb
+      b111: inputAlu_b = bitemask; //BITMASK for binary, used in removing of msb
       }
     
     //ALU check
@@ -202,14 +194,14 @@ module game_beta (
       }
       
     //for debug purposes
-    debug_out = user_input; //debug for checking 
+    debug_out = bitemask; //debug for checking 
     
     //debug_out_2 = players.pointer_out; //debug for checking pointer value
     //debug_out_2 = players.rand_register_out; 
     //debug_out_2 = players.row_red_out;
     debug_out_2 = players.row_red_out; //debug for checking red row
     
-    debug_out_3 = bitmask; 
+    debug_out_3 = user_input; 
     
     //things that work & dont work (this is a comment in game_beta.luc)
     //1. pointer increase to 10 then game over 
@@ -218,5 +210,8 @@ module game_beta (
     //4. score & difficulty relationship (hard coded several score inputs)
     //5. (now testing) red,green,blue button input corresponding to pointer (trying with red now first)
     //5.1 correct button input reduces pointer, BUT DOESNT REMOVE Rx bits. (edit in regfile)
+    //5.2 bitmask operation does NOT produce specified bits as intended
+    
+    
   }
 }

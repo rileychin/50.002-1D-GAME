@@ -159,7 +159,7 @@ module control_unit (
          regfile_write_address = b111; //write R7
          asel = b010; //choose user_input
          bsel = b000; //choose Rb_data
-         alufn = b000011; //check MSB (custom function)
+         alufn = b000011; //check equal MSB (custom function)
          wdsel = 1;
           current_state = b000010;
          game_fsm.d = game_fsm.BRANCH_RED;
@@ -170,7 +170,7 @@ module control_unit (
          regfile_write_address = b111; //write R7
          asel = b010; //choose user_input
          bsel = b000; //choose Rb_data
-         alufn = b000011; //check MSB (custom function)
+         alufn = b000011; //check equal MSB (custom function)
          wdsel = 1;
          current_state = b000011;
          game_fsm.d = game_fsm.BRANCH_GREEN;
@@ -181,7 +181,7 @@ module control_unit (
          regfile_write_address = b111; //write R7
          asel = b010; //choose user_input
          bsel = b000; //choose Rb_data
-         alufn = b000011; //check MSB (custom function)
+         alufn = b000011; //check equal MSB (custom function)
          wdsel = 1;
          current_state = b000100;
          game_fsm.d = game_fsm.BRANCH_BLUE;
@@ -196,7 +196,8 @@ module control_unit (
             game_fsm.d = game_fsm.REMOVE_R0_DATA;
             }
           else{
-            game_fsm.d = game_fsm.SHIFT_R0_ONE;
+            //game_fsm.d = game_fsm.SHIFT_R0_ONE; //comment if dont want penalty
+            game_fsm.d = game_fsm.IDLE;           //comment if want penalty 
             }
         
       game_fsm.BRANCH_GREEN:
@@ -207,7 +208,8 @@ module control_unit (
             game_fsm.d = game_fsm.REMOVE_R1_DATA;
             }
           else{
-            game_fsm.d = game_fsm.SHIFT_R0_ONE;
+            //game_fsm.d = game_fsm.SHIFT_R0_ONE;
+            game_fsm.d = game_fsm.IDLE;
             }
         
        game_fsm.BRANCH_BLUE:
@@ -218,7 +220,8 @@ module control_unit (
             game_fsm.d = game_fsm.REMOVE_R2_DATA;
             }
           else{
-            game_fsm.d = game_fsm.SHIFT_R0_ONE;
+            //game_fsm.d = game_fsm.SHIFT_R0_ONE;
+            game_fsm.d = game_fsm.IDLE;
             }
 
        //remove directly from FSM and update REGFILE direct

@@ -74,8 +74,8 @@ module alu (
           actual_output = alu_mul.out;
       }
         else if(alufn[3:0] == b0011){ //custom operator to check for MSB 
-          temp_a = a^b;
-          temp_b = a&b;
+          temp_a = a^b; //a XOR b
+          temp_b = a&b; //a AND b 
           actual_output = (temp_a <= temp_b);
         }
                  

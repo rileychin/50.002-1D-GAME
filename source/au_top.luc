@@ -11,7 +11,10 @@ module au_top (
     input io_dip [3][8],    // DIP switches on IO Shield
     input red,
     input green,
-    input blue
+    input blue,
+    output redLED[2],
+    output greenLED[2],
+    output blueLED[2]
   ) {
   
   sig rst;                  // reset signal
@@ -24,6 +27,9 @@ module au_top (
     rand_increment random(.rst(rst));
     button_conditioner buttoncond[6];
     edge_detector buttondetector[6](#RISE(1), #FALL(0));
+    
+    multi_seven_seg seg(.rst(rst));
+    multi_dec_ctr dec_ctr;
   }
   
   always {
@@ -37,7 +43,9 @@ module au_top (
     io_sel = 4hf;           // select no digits
     
     usb_tx = usb_rx;        // echo the serial data
-    
+    redLED = 0;
+    greenLED = 0;
+    blueLED = 0;
     gameMachine.random_input = random.out;
     //temporary add 0 red,green,blue input values
     //gameMachine.red_btn_input = red;
@@ -74,9 +82,21 @@ module au_top (
     //buttoncond.in[3] = io_button[3];
     //buttondetector.in[3] = buttoncond.out[3];
     //gameMachine.red_btn_input = buttondetector.out[3]; //temporary test button for game 
-    
+
+    redLED = gameMachine.red_out;
+    greenLED = gameMachine.green_out;
+    blueLED = gameMachine.blue_out;
     io_led[0] = gameMachine.debug_out;
     io_led[1] = gameMachine.debug_out_2;
     io_led[2] = gameMachine.debug_out_3;
+    
+    //setting up 7 segments for score
+    dec_ctr.inc = gameMachine.dec_score;
+    dec_ctr.rst = gameMachine.dec_reset;
+    
+    seg.values = dec_ctr.digits;
+    io_seg = ~seg.seg;
+    io_sel = ~seg.sel;
+    
   }
 }

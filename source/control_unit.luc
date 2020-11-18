@@ -14,9 +14,6 @@ module control_unit (
     input pointer_value[10],
     
     
-    output red_bits_generated[10],
-    output green_bits_generated[10],
-    output blue_bits_generated[10],
     output rand_output[2],
     output user_output[10],
     output current_state[6], //USED SOLELY FOR DEBUG PURPOSES, checks which state the FSM is currently in 
@@ -31,8 +28,8 @@ module control_unit (
     output regfile_read_address_b[3],
     output we_regfile,
     output wdsel,
-    output minus_msb // new control signal to BETA to decrease most significant bit 
-    
+    output dec_rst,
+    output dec_score
     
   ) {
   
@@ -96,9 +93,9 @@ module control_unit (
   
   always {
   
+    dec_rst = 0;
+    dec_score = 0;
     
-    
-  
     alufn = 0;
     asel = 0;
     bsel = 0;
@@ -106,18 +103,16 @@ module control_unit (
     regfile_write_address = 111;
     regfile_read_address_a = 000;
     regfile_read_address_b = 000;
-    red_bits_generated = 0;
-    green_bits_generated = 0;
-    blue_bits_generated = 0;
+
     rand_output = 0;
     user_output = 0;
     wdsel = 1;
     current_state = 0;
-    minus_msb = 0; //dont minus msb of 
     
     //check if reset button is pressed, reset all registers
     if(rst) {
       game_fsm.d = game_fsm.IDLE;
+      dec_rst = 1;
       }    
     
     
@@ -257,7 +252,6 @@ module control_unit (
           game_fsm.d = game_fsm.SUB_POINTER;
         
       game_fsm.SUB_POINTER:
-        minus_msb = 0;
         if(pointer_value == b0000000000){ //if pointer is at 0, no need to SUB again
           game_fsm.d = game_fsm.ADD_SCORE;
             }
@@ -274,6 +268,7 @@ module control_unit (
             }
         
       game_fsm.ADD_SCORE:
+        dec_score=1;
          we_regfile = 1;
          regfile_read_address_a = b011;
          regfile_write_address = b011;
@@ -482,7 +477,8 @@ module control_unit (
           game_fsm.d = game_fsm.ADD_ONE_BLUE;
           }
         else{
-          game_fsm.d = game_fsm.ADD_ONE_ALL_RED;
+          //me_fsm.d = game_fsm.ADD_ONE_ALL_RED;
+          game_fsm.d = game_fsm.GENERATE_RAND; //remove after done testing 
           }
         
       game_fsm.ADD_ONE_RED:
@@ -649,6 +645,7 @@ module control_unit (
         
       game_fsm.GAMEOVER:
          we_regfile = b0;
+          dec_rst = 1;
           current_state = b110000;
          if (red_btn_input || green_btn_input || blue_btn_input){
           game_fsm.d = game_fsm.IDLE;

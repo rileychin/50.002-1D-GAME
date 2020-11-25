@@ -17,9 +17,9 @@ module game_beta (
     output debug_out_3[10],
     //output timer_out[10]
     
-    output red_out[2],
-    output green_out[2],
-    output blue_out[2],
+    output red_out[10],
+    output green_out[10],
+    output blue_out[10],
     
     output dec_score,
     output dec_reset
@@ -120,6 +120,8 @@ module game_beta (
     //section here is to MANUALLY OVERRIDE R0,R1,R2 registers //TESTING ONLY, does not work yet 
        //power move here  bitmask used to GET RID OF MSB, user_input is to CHECK msb
     
+   
+    // TODO: test if bitemask is correct or if it should be 1 bit to the left
       case(players.pointer_out[3:0]){
       b0000: bitemask = b0000000000; user_input = b0000000000; //user_input <= register 
       b0001: bitemask = b0000000000; user_input = b0000000001; 
@@ -136,13 +138,13 @@ module game_beta (
     
     //random input converted into 10 bits, have to put this into a ROM 
     if(random_input == b00){
-      rand_tenbits = b0000000100; //write back direct Ra[2] = 1 red
+      rand_tenbits = b0000000000; //write back direct Ra[2] = 1 red
       }
     else if(random_input == b01){
-      rand_tenbits = b0000001001; //write back direct Ra[3] = 1 green
+      rand_tenbits = b0000000001; //write back direct Ra[3] = 1 green
       }
     else if(random_input == b10){
-      rand_tenbits = b0000010010; //write back direct Ra[4] = 1 blue
+      rand_tenbits = b0000000010; //write back direct Ra[4] = 1 blue
       }
     else if(random_input == b11){
       rand_tenbits = b0000000011; //write back direct ALL
@@ -201,15 +203,15 @@ module game_beta (
       }
       
     //for debug purposes
-    debug_out = players.row_red_out; //debug for checking red row
+    debug_out = players.pointer_out; // players.row_red_out; //debug for checking red row
     
     //debug_out_2 = players.pointer_out; //debug for checking pointer value
     //debug_out_2 = players.rand_register_out; 
     //debug_out_2 = players.row_red_out;
     
-    debug_out_2 = players.row_blue_out; //IMPORTANT: bitemask and user_input should be in sync 
+    debug_out_2 = bitemask; // players.row_blue_out; //IMPORTANT: bitemask and user_input should be in sync 
     
-    debug_out_3 = players.row_green_out; 
+    debug_out_3 = user_input; // players.row_green_out; 
     
     
     red_out = players.row_red_out;

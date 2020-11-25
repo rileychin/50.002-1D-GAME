@@ -10,8 +10,8 @@ module alu (
   ) {
   
   sig actual_output[16];  // temporary variables
-  sig temp_a;
-  sig temp_b;
+  sig temp_a[16];
+  sig temp_b[16];
   // ALU MODULES
   sixteen_bit_adder alu_adder;
   sixteen_bit_boolean alu_boole;
@@ -76,7 +76,7 @@ module alu (
         else if(alufn[3:0] == b0011){ //custom operator to check for MSB 
           temp_a = a^b; //a XOR b
           temp_b = a&b; //a AND b 
-          actual_output = (temp_a <= temp_b);
+          actual_output = temp_a <= temp_b;
         }
                  
       b01:  // BOOLEAN

@@ -12,9 +12,10 @@ module au_top (
     input red,
     input green,
     input blue,
-    output redLED[2],
-    output greenLED[2],
-    output blueLED[2]
+    output redLED[10],
+    output greenLED[10],
+    output blueLED[10],
+    output sevenSeg[12]
   ) {
   
   sig rst;                  // reset signal
@@ -86,9 +87,13 @@ module au_top (
     redLED = gameMachine.red_out;
     greenLED = gameMachine.green_out;
     blueLED = gameMachine.blue_out;
-    io_led[0] = gameMachine.debug_out;
-    io_led[1] = gameMachine.debug_out_2;
-    io_led[2] = gameMachine.debug_out_3;
+    //io_led[0] = gameMachine.debug_out;
+    //io_led[1] = gameMachine.debug_out_2;
+    //io_led[2] = gameMachine.debug_out_3;
+    
+    io_led[0][3:0] = gameMachine.debug_out[3:0];
+    io_led[1] = gameMachine.debug_out_2[7:0];
+    io_led[2] = gameMachine.debug_out_3[7:0];
     
     //setting up 7 segments for score
     dec_ctr.inc = gameMachine.dec_score;
@@ -97,6 +102,7 @@ module au_top (
     seg.values = dec_ctr.digits;
     io_seg = ~seg.seg;
     io_sel = ~seg.sel;
-    
+    sevenSeg[7:0] = ~seg.seg;
+    sevenSeg[11:8] = seg.sel;
   }
 }

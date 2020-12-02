@@ -6,11 +6,7 @@ module control_unit (
     input blue_btn_input,
     input rb_data[10],
     input ra_data[10],
-    //input pointer[5],
-    //input difficulty[10],
-    //input user_input[10],
     input slow_clock_in,   
-    input score_simulate,
     input pointer_value[10],
     
     
@@ -142,16 +138,11 @@ module control_unit (
     else if(slow_clock_in){
       game_fsm.d = game_fsm.SHIFT_R0_ONE;
       }
-     //TESTING INPUT FOR SCORE 
-     //testing purpose only, remove later
-    else if(score_simulate){
-      game_fsm.d = game_fsm.BRANCH_CHECK_SCORE_60;    
-      }
     //remain at idle
     else{
       game_fsm.d = game_fsm.IDLE;  
       }  
-       
+
         //do comparison of Rx[pointer] in game_beta.luc compare MSB == (lXORr <=lANDr)
           //havent done check_all check
       game_fsm.CHECK_RED:
@@ -186,7 +177,7 @@ module control_unit (
          wdsel = 1;
          current_state = b000100;
          game_fsm.d = game_fsm.BRANCH_BLUE;
-        
+       
        
       //branch and check for Rb content 
       game_fsm.BRANCH_RED:
@@ -257,7 +248,7 @@ module control_unit (
           wdsel = 1;
           current_state = b000010;
           game_fsm.d = game_fsm.BRANCH_WHITE_RED;
-          
+
         game_fsm.BRANCH_WHITE_RED:
          we_regfile = 0;
          regfile_read_address_b = b111;
@@ -270,7 +261,7 @@ module control_unit (
             // BLUE
             game_fsm.d = game_fsm.REMOVE_R2_DATA;
           }
-        
+
       game_fsm.BRANCH_WHITE_GREEN:
          we_regfile = 0;
          regfile_read_address_b = b111;
@@ -296,7 +287,7 @@ module control_unit (
             // GREEN
             game_fsm.d = game_fsm.REMOVE_R1_DATA;
           }
-          
+
        game_fsm.REMOVE_ALL_R0_DATA:
           we_regfile = 1; //actually dont have to override whatever register we have 
           regfile_read_address_a = b000; //select red R0
@@ -306,7 +297,7 @@ module control_unit (
           alufn = b011000; //AND
           current_state = b001000;
           game_fsm.d = game_fsm.REMOVE_ALL_R1_DATA;
-          
+
       game_fsm.REMOVE_ALL_R1_DATA:
           we_regfile = 1;
           regfile_read_address_a = b001;//select green R1
@@ -316,7 +307,7 @@ module control_unit (
           alufn = b011000;//AND
           current_state = b001001;
           game_fsm.d = game_fsm.REMOVE_ALL_R2_DATA;
-        
+
       game_fsm.REMOVE_ALL_R2_DATA:
           we_regfile = 1;
           regfile_read_address_a = b010; //select blue R2
@@ -370,7 +361,7 @@ module control_unit (
           asel = b000;
           bsel = b011;
           wdsel = b1;
-          alufn = b000001;
+          alufn = b000001; //SUB 
           current_state = b001011;
           game_fsm.d = game_fsm.ADD_SCORE;
             }

@@ -47,26 +47,9 @@ module au_top (
     redLED = 0;
     greenLED = 0;
     blueLED = 0;
+    
     gameMachine.random_input = random.out;
-    //temporary add 0 red,green,blue input values
-    //gameMachine.red_btn_input = red;
-    gameMachine.green_btn_input = green;
-    gameMachine.blue_btn_input = blue;
-    
-    //simulating scores for and respective speeds
-    //testing purpose, remove after finish
-    buttoncond.in[0] = io_button[0];
-    buttondetector.in[0] = buttoncond.out[0];
-    gameMachine.score_10 = buttondetector.out[0];
-    
-    buttoncond.in[1] = io_button[1];
-    buttondetector.in[1] = buttoncond.out[1];
-    gameMachine.score_30 = buttondetector.out[1];
-    
-    buttoncond.in[2] = io_button[2];
-    buttondetector.in[2] = buttoncond.out[2];
-    gameMachine.score_60 = buttondetector.out[2];
-    
+        
     buttoncond.in[3] = red; //red input
     buttondetector.in[3] = buttoncond.out[3];
     gameMachine.red_btn_input = buttondetector.out[3];
@@ -75,25 +58,14 @@ module au_top (
     buttondetector.in[4] = buttoncond.out[4];
     gameMachine.green_btn_input = buttondetector.out[4];
     
-    //buttoncond.in[5] = blue;
     buttoncond.in[5] = blue; //blue input
     buttondetector.in[5] = buttoncond.out[5];
     gameMachine.blue_btn_input = buttondetector.out[5];
-    
-    //buttoncond.in[3] = io_button[3];
-    //buttondetector.in[3] = buttoncond.out[3];
-    //gameMachine.red_btn_input = buttondetector.out[3]; //temporary test button for game 
+
 
     redLED = gameMachine.red_out;
     greenLED = gameMachine.green_out;
     blueLED = gameMachine.blue_out;
-    //io_led[0] = gameMachine.debug_out;
-    //io_led[1] = gameMachine.debug_out_2;
-    //io_led[2] = gameMachine.debug_out_3;
-    
-    io_led[0][3:0] = gameMachine.debug_out[3:0];
-    io_led[1] = gameMachine.debug_out_2[7:0];
-    io_led[2] = gameMachine.debug_out_3[7:0];
     
     //setting up 7 segments for score
     dec_ctr.inc = gameMachine.dec_score;

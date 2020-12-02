@@ -6,17 +6,6 @@ module game_beta (
     input blue_btn_input,
     input random_input[2],
     
-    input score_10,
-    input score_30,
-    input score_60,
-    
-    //debug 
-    //input button_in,
-    output debug_out[10],
-    output debug_out_2[10],
-    output debug_out_3[10],
-    //output timer_out[10]
-    
     output red_out[10],
     output green_out[10],
     output blue_out[10],
@@ -28,17 +17,11 @@ module game_beta (
   
   sig inputAlu_a[10];
   sig inputAlu_b[10];
-
   sig current_pointer[10];
   sig rand_tenbits[10];
-  
   sig overwrite_data[10];
-  
   sig user_input[10];
-  
   sig bitemask[10];
-  
-  //setup slow clock as input,one difficulty for now
   
   .clk(clk){
     edge_detector clock_detector(#RISE(1), #FALL(0));
@@ -58,30 +41,9 @@ module game_beta (
     inputAlu_a = 0;
     inputAlu_b = 0;
     rand_tenbits = 0;
-    players.score = 0;
-    players.score_in = b0;
-    game_controlunit.score_simulate = b0;
     overwrite_data = 0;
     user_input = 0;
     bitemask = 0;
-    
-    //testing purpose, remove after finish
-    if(score_10){
-      players.score = b0000001010;
-      players.score_in = b1;
-      game_controlunit.score_simulate = b1;
-      }
-    else if(score_30){
-      players.score = b0000011110;
-      players.score_in = b1;
-      game_controlunit.score_simulate = b1;
-      }
-    else if (score_60){
-      players.score = b0000111100;
-      players.score_in = b1;
-      game_controlunit.score_simulate = b1;
-      }
-    
     
     //increase slow_clock each time
     clock_detector.in = 0;
@@ -116,12 +78,9 @@ module game_beta (
     
     //current pointer
     current_pointer = players.pointer_out;
-    
-    //section here is to MANUALLY OVERRIDE R0,R1,R2 registers //TESTING ONLY, does not work yet 
-       //power move here  bitmask used to GET RID OF MSB, user_input is to CHECK msb
-    
    
-    // TODO: test if bitemask is correct or if it should be 1 bit to the left
+    
+    //values based on pointer values, bit mas
       case(players.pointer_out[3:0]){
       b0000: bitemask = b0000000000; user_input = b0000000000; //user_input <= register 
       b0001: bitemask = b0000000000; user_input = b0000000001; 
@@ -201,18 +160,6 @@ module game_beta (
       b0: players.write_data = b0; //only in event of reset
       default: players.write_data = game_alu.out;
       }
-      
-    //for debug purposes
-    debug_out = players.pointer_out; // players.row_red_out; //debug for checking red row
-    
-    //debug_out_2 = players.pointer_out; //debug for checking pointer value
-    //debug_out_2 = players.rand_register_out; 
-    //debug_out_2 = players.row_red_out;
-    
-    debug_out_2 = bitemask; // players.row_blue_out; //IMPORTANT: bitemask and user_input should be in sync 
-    
-    debug_out_3 = user_input; // players.row_green_out; 
-    
     
     red_out = players.row_red_out;
     green_out = players.row_green_out;
@@ -220,14 +167,6 @@ module game_beta (
     
     dec_reset = game_controlunit.dec_rst;
     dec_score = game_controlunit.dec_score;
-    //things that work & dont work (this is a comment in game_beta.luc)
-    //1. pointer increase to 10 then game over 
-    //2. shifting R0,R1,R2 content and adding based on generated bits
-    //3. updating random register from generated random bits
-    //4. score & difficulty relationship (hard coded several score inputs)
-    //5. (now testing) red,green,blue button input corresponding to pointer (trying with red now first)
-    //5.1 correct button input reduces pointer, BUT DOESNT REMOVE Rx bits. (edit in regfile)
-    //5.2 masking works, but does not reduce color corresponding to button press 
     
     
   }

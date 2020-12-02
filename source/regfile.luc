@@ -1,31 +1,26 @@
 module regfile (
     input clk,  // clock
-    input read_address_1[3], //read and write 10 bits of data in 
-    input read_address_2[3], //read and write 10 bits of data in 
-    input write_address[3], // same as above
+    input read_address_1[3], //read 3 bits for address_1
+    input read_address_2[3], //read 3 bits for address_2
+    input write_address[3], 
     input write_data[10], //overwrite all 10 bits from each register
-    input write_enable,
+    input write_enable, //allows writing into regfile
     input rst, // reset
     
     output read_data_1[10], //read first register to do computation
     output read_data_2[10], //read second register to do computation
     
-    //debug outputs, feed directly to au_top to check value
-    //testing purpose, remove after finish
-    input score_in[1],
-    input score[10], //debug to add scores 
-    
-    output pointer_out[10], //debug for checking pointer value
-    output row_red_out[10], //debug for checking red value
-    output row_green_out[10], //debug for checking green value
-    output row_blue_out[10], //debug for checking blue value
-    output rand_register_out[10],
-    output current_timer_out[10],
-    output current_score_out[10],
+    output pointer_out[10], //direct output for pointer value
+    output row_red_out[10], //direct output for red register values
+    output row_green_out[10],  //direct output for green register values
+    output row_blue_out[10],  //direct output for blue register values
+    output rand_register_out[10], //direct output for random register values
+    output current_timer_out[10], //direct output for current difficulty
+    output current_score_out[10], //direct output for current score
     
     //
-    output ra_out[10],
-    output rb_out[10]
+    output ra_out[10], //output read address 1
+    output rb_out[10] //output read address 2 
   ) {
   
   sig out_a[10], out_b[10];
@@ -60,13 +55,6 @@ module regfile (
     out_a = 0;
     out_b = 0;
     
-    //testing purpose, remove after finish
-    if (score_in){
-      current_score.d = current_score.q + score;
-      }
-    
-  
-    
     //write back for write enable
     if (write_enable){
     //writing data back to registers
@@ -82,6 +70,7 @@ module regfile (
         }
     }
       
+      //read register 1 data
       case (read_address_1){
         b000: read_data_1 = row_red.q; out_a = row_red.q;
         b001: read_data_1 = row_green.q; out_a = row_green.q;
@@ -94,7 +83,7 @@ module regfile (
         default: read_data_1 = 10b0;
         }
       
-      
+      //read register 2 data
       case(read_address_2){
         b000: read_data_2 = row_red.q; out_b = row_red.q;
         b001: read_data_2 = row_green.q; out_b = row_green.q;
@@ -107,12 +96,12 @@ module regfile (
         default: read_data_2 = 10b0;
         }
     
-    
-    
+    //two output ports for regfile, Ra & Rb
     ra_out = out_a;
     rb_out = out_b;
     
-    //debug
+    
+    //direct outputs for regfiles
     row_red_out = row_red.q;
     row_green_out = row_green.q;
     row_blue_out = row_blue.q;

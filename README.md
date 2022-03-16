@@ -14,4 +14,5 @@ Dated: Wednesday 20th November 2020
     
 check game_beta.luc for more information
 
-
+link to youtube:
+https://www.youtube.com/watch?v=rLnOIjl43-I&ab_channel=SUTDProjectUpload
